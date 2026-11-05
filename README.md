@@ -38,16 +38,14 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 
 要求 dsh 0.2.0 以上、Node 18 以上。Windows 11 和 Ubuntu 22.04 都实测过，macOS 没测。
 
-两种装法，选一个。
+三种装法，按场景选。
 
-**让 dsh 自己装。** 把仓库放到本机任意目录，在会话里说「安装这个目录下的插件：/绝对/路径」，它走 `install_bundle`。
-
-**手动加依赖。** 编辑 `~/.dsh/profiles/<profile>/package.json`：
+**从 npm 装**（给使用者）。编辑 `~/.dsh/profiles/<profile>/package.json`：
 
 ```json
 {
   "dependencies": {
-    "dsh-sensitive-guard": "link:/absolute/path/to/sensitive-guard"
+    "dsh-sensitive-guard": "0.3.2"
   },
   "dsh": {
     "profile": {
@@ -57,7 +55,11 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 }
 ```
 
-`bundles` 里保留原有条目，只追加这一项。然后在同目录跑 `pnpm install`，重启 dsh。`link:` 不拷贝文件，改代码立刻生效，但 host 端的改动还是要重启进程。
+`bundles` 里保留原有条目，只追加这一项。然后在同目录跑 `pnpm install`，重启 dsh。
+
+**让 dsh 自己装**（不想手改文件的场合）。在会话里说「安装这个目录下的插件：/绝对/路径」，它走 `install_bundle`。
+
+**本地改代码用 link**。把版本号换成 `"link:/absolute/path/to/sensitive-guard"`，源码改动立刻生效，但 host 端的改动还是要重启进程。
 
 ## 确认装好了
 
