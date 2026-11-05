@@ -409,6 +409,18 @@ check('5 位仍不拦', five === '我的密码是 12345', JSON.stringify(five));
 const english = await runPre('the secret is hidden');
 check('英文句子里 6 字单词不误伤', english === 'the secret is hidden', JSON.stringify(english));
 
+// A trailing particle must stay outside the placeholder, and all spellings of
+// the same secret must share one hash — otherwise export hands back "123456吗".
+const withSpace = await runPre('我的密码是 123456 吗?');
+const noSpace = await runPre('我的密码是123456吗');
+const fullComma = await runPre('我的密码是123456，对吗');
+const bare = await runPre('密码是 123456 吗');
+check('语气词留在占位符外（有空格）', withSpace === '我的密码是 <SG_8d969eef6eca> 吗?', withSpace);
+check('语气词留在占位符外（无空格）', noSpace === '我的密码是<SG_8d969eef6eca>吗', noSpace);
+check('全角逗号切断取值', fullComma === '我的密码是<SG_8d969eef6eca>，对吗', fullComma);
+check('四种写法共用同一占位符', new Set([withSpace, noSpace, fullComma, bare].map((s) => (s.match(/<SG_[0-9a-f]{12}>/) || [''])[0])).size === 1);
+check('句尾问号不被吞进密码', (await runPre('我的密码是 abcdef?')).endsWith('<SG_') === false);
+
 /* --------------------------------------------------------------------- */
 
 fs.rmSync(TEMP_HOME, { recursive: true, force: true });
