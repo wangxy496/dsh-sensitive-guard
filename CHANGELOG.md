@@ -1,5 +1,10 @@
 # 变更记录
 
+## 0.3.2
+
+- `exports` 增加 `./package.json`，修掉 `require('dsh-sensitive-guard/package.json')` 报 `ERR_PACKAGE_PATH_NOT_EXPORTED`。
+- README 安装章节按 npm 发版更新：给出从 npm 装的版本号写法，`link:` 降为本地开发用。
+
 ## 0.3.1
 
 - 设置页不再只显示「载入失败」：被拒时展示说明卡，含当前访问地址、数据目录路径，以及**按来源算好的** `allowCidrs` 配置（IPv4 取 /24，IPv6 取 /64），可直接照抄。

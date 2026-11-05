@@ -34,7 +34,7 @@ import path from 'node:path';
 const VAULT_ROUTE = '/guard/vault';
 const REVEAL_ROUTE = '/guard/reveal';
 const SETTINGS_ROUTE = '/guard/settings';
-const PLUGIN_VERSION = '0.3.1';
+const PLUGIN_VERSION = '0.3.2';
 
 /** Stable placeholder form: <SG_ + 12 hex chars of sha256(plaintext) + >. */
 const PH_EXACT = /^<SG_[0-9a-f]{12}>$/;
