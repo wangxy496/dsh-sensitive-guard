@@ -1,8 +1,38 @@
 # dsh-sensitive-guard
 
-给 DSH 加一层保护：密钥、令牌、密码在进入模型上下文之前，被换成 `<SG_xxxxxxxxxxxx>` 占位符，明文加密后留在本机。模型拿到的是代号，你点一下能看到真值。
+DeepSeek Harness（DSH）的插件，只做一件事：把密钥、令牌、密码挡在模型上下文之外。用户消息和工具结果里的凭证，在进入上下文之前就被换成 `<SG_xxxxxxxxxxxx>` 占位符，明文加密留在本机。模型拿到的是代号，你点一下能看到真值。
 
 代号里那 12 位十六进制是 `sha256(明文)` 的前缀，不可逆，只用来保证同一个密钥每次都是同一个代号。
+
+## 它往宿主里注册了什么
+
+DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端抓数据、管保管库、开接口；客户端加设置页和对话里的胶囊。
+
+| 注册点 | 端 | 作用 |
+| --- | --- | --- |
+| `agent/pre-step` | host 钩子 | 用户输入进上下文前脱敏 |
+| `tools/post-execute` | host 钩子 | 工具结果进上下文前脱敏 |
+| `llm/stream` | host 钩子 | 出网的流式文本兜底清洗 |
+| `sensitive_guard_status`、`sensitive_guard_export` | host 工具 | 查状态；把明文导出成 0600 临时文件 |
+| `/guard/vault`、`/guard/reveal`、`/guard/settings` | HTTP 路由 | 设置页取数、揭示明文、暂停开关 |
+| `settings.section` | 客户端 slot | 设置页里的「敏感保护」 |
+| `conversation.user.text.node` | 客户端 slot | 对话里的锁形胶囊 |
+
+前提只要 `tools` 一个。`webServer` 不存在时脱敏照常工作，只是设置页和揭示用不了。
+
+## 长什么样
+
+遮住的时候，对话里是 `sk-` 后面跟一个锁：
+
+![对话里被遮住的凭证](https://raw.githubusercontent.com/wangxy496/dsh-sensitive-guard/main/docs/chat-masked.png)
+
+点一下锁，就地显示明文，20 秒后自动遮回：
+
+![点开后显示明文](https://raw.githubusercontent.com/wangxy496/dsh-sensitive-guard/main/docs/chat-revealed.png)
+
+设置页列出保管库里全部条目，行尾的锁同样能揭示：
+
+![设置页](https://raw.githubusercontent.com/wangxy496/dsh-sensitive-guard/main/docs/settings.png)
 
 ## 安装
 
@@ -184,7 +214,7 @@ node test.mjs
 
 | 文件 | 作用 |
 | --- | --- |
-| `index.js` | host 端：三条钩子、保管库、两个工具、四条路由 |
+| `index.js` | host 端：三条钩子、保管库、两个工具、三条路由 |
 | `client.js` | 客户端：设置页、对话内胶囊、暂停开关 |
 | `test.mjs` | 自测 |
 | `CHANGELOG.md` | 变更记录 |
