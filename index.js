@@ -34,12 +34,21 @@ import path from 'node:path';
 const VAULT_ROUTE = '/guard/vault';
 const REVEAL_ROUTE = '/guard/reveal';
 const SETTINGS_ROUTE = '/guard/settings';
-const PLUGIN_VERSION = '0.3.3';
+const PLUGIN_VERSION = '0.3.4';
 
 /** Stable placeholder form: <SG_ + 12 hex chars of sha256(plaintext) + >. */
 const PH_EXACT = /^<SG_[0-9a-f]{12}>$/;
 const PH_HINT = '<SG_';
 const HASH_EXACT = /^[0-9a-f]{12}$/;
+
+/**
+ * Prose rules capture the rest of the token, so a trailing Chinese particle or
+ * punctuation mark rides along: "我的密码是 123456吗" would vault `123456吗` and
+ * hand the particle back on export, with a different hash than the bare secret.
+ * Stripped only by rules that opt in (`trimTail`), and only while something
+ * worth masking is left.
+ */
+const TAIL_JUNK = /(?:[?？!！。.，,;；:：、'"`“”‘’()（）[\]【】《》「」『』]|[吗呢啊吧呀嘛哦呗啦么哈]+)$/u;
 
 /**
  * Vendor prefixes are not the secret — the tail is. Keeping `sk-` / `ghp_` in
@@ -340,11 +349,11 @@ const BUILTIN_RULES = [
   // assign-only rule silently missed every sentence-shaped secret. The optional
   // `[A-Za-z_]{0,12}` tail catches env-style names such as SECRET_KEY or
   // DB_PASSWORD_HASH, where `secret` is glued to a suffix by an underscore.
-  { id: 'keyword-prose', group: 2, re: /(password|passwd|pwd|secret|token|api[\s_-]?key|apikey|access[\s_-]?key|client[\s_-]?secret|密码|口令|密钥|令牌|凭证|私钥)[A-Za-z_]{0,12}\s*(?:[:=：]|是|为|就是|is)\s*["'`]?([^\s"'`,;)}\]]{8,})/gi },
+  { id: 'keyword-prose', group: 2, trimTail: true, re: /(password|passwd|pwd|secret|token|api[\s_-]?key|apikey|access[\s_-]?key|client[\s_-]?secret|密码|口令|密钥|令牌|凭证|私钥)[A-Za-z_]{0,12}\s*(?:[:=：]|是|为|就是|is)\s*["'`]?([^\s"'`,;)}\]，。、；：！？（）【】《》「」『』“”‘’…]{8,})/gi },
   // Chinese prose gets a lower floor: "我的密码是 123456" is a real secret and
   // six-digit passwords are common. English prose keeps 8 so that sentences like
   // "the secret is hidden" are not masked on the word "hidden".
-  { id: 'keyword-prose-cn', group: 2, re: /(密码|口令|密钥|令牌|凭证|私钥)\s*(?:[:=：]|是|为|就是)\s*["'`]?([^\s"'`,;)}\]]{6,})/gi },
+  { id: 'keyword-prose-cn', group: 2, trimTail: true, re: /(密码|口令|密钥|令牌|凭证|私钥)\s*(?:[:=：]|是|为|就是)\s*["'`]?([^\s"'`,;)}\]，。、；：！？（）【】《》「」『』“”‘’…]{6,})/gi },
   // Opaque bearer credentials have no vendor prefix and no `key: value` shape.
   { id: 'bearer-token', group: 1, re: /\bBearer\s+([A-Za-z0-9\-._~+/]{12,}={0,2})/gi },
   // Command-line passwords. Scoped to clients whose `-p` / `-a` really means a
@@ -478,11 +487,20 @@ function findHits(text) {
       if (value.includes(PH_HINT)) continue;
       const range = match.indices && match.indices[rule.group];
       const offset = range ? range[0] : match.index + match[0].indexOf(raw);
-      const end = range ? range[1] : offset + raw.length;
+      let end = range ? range[1] : offset + raw.length;
+      // Trim after the offsets are known, so the placeholder covers only the
+      // secret and the particle stays as readable text.
+      let trimmed = value;
+      if (rule.trimTail) {
+        let prev;
+        do { prev = trimmed; trimmed = trimmed.replace(TAIL_JUNK, ''); } while (trimmed !== prev);
+        if (trimmed.length < 6) continue;
+        end -= value.length - trimmed.length;
+      }
       // The keyword group (when the rule has one) says *what* leaked — password /
       // token / key — which the rule id alone cannot express for keyword-prose.
       const label = rule.group > 1 && typeof match[1] === 'string' ? match[1] : rule.id;
-      hits.push({ offset, end, value, rule: rule.id, label });
+      hits.push({ offset, end, value: trimmed, rule: rule.id, label });
     }
   }
   if (fileRules.entropy) {
