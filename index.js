@@ -341,6 +341,10 @@ const BUILTIN_RULES = [
   // `[A-Za-z_]{0,12}` tail catches env-style names such as SECRET_KEY or
   // DB_PASSWORD_HASH, where `secret` is glued to a suffix by an underscore.
   { id: 'keyword-prose', group: 2, re: /(password|passwd|pwd|secret|token|api[\s_-]?key|apikey|access[\s_-]?key|client[\s_-]?secret|密码|口令|密钥|令牌|凭证|私钥)[A-Za-z_]{0,12}\s*(?:[:=：]|是|为|就是|is)\s*["'`]?([^\s"'`,;)}\]]{8,})/gi },
+  // Chinese prose gets a lower floor: "我的密码是 123456" is a real secret and
+  // six-digit passwords are common. English prose keeps 8 so that sentences like
+  // "the secret is hidden" are not masked on the word "hidden".
+  { id: 'keyword-prose-cn', group: 2, re: /(密码|口令|密钥|令牌|凭证|私钥)\s*(?:[:=：]|是|为|就是)\s*["'`]?([^\s"'`,;)}\]]{6,})/gi },
   // Opaque bearer credentials have no vendor prefix and no `key: value` shape.
   { id: 'bearer-token', group: 1, re: /\bBearer\s+([A-Za-z0-9\-._~+/]{12,}={0,2})/gi },
   // Command-line passwords. Scoped to clients whose `-p` / `-a` really means a

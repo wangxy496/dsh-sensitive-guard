@@ -110,7 +110,7 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 
 赋值和环境变量：`password=`、`secret:`、`api_key:`、`SECRET_KEY=`、`DB_PASSWORD=`。
 
-中文说法：`数据库密码是…`、`我的 token 是…`。
+中文说法：`数据库密码是…`、`我的 token 是…`。中文语境的密码从 6 位起就拦（`我的密码是 123456`），因为 6 位数字密码很常见；英文和 `key=value` 形式从 8 位起，否则 `the secret is hidden` 里的 `hidden` 会被当成密码。
 
 连接串：`mysql://user:pass@host`、`postgresql://…`、JDBC 参数里的 `password=`、`X-Api-Key:`。
 

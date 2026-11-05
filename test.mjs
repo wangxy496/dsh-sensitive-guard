@@ -396,6 +396,19 @@ check('纯 CR 打断的 key 能识别', /sk-<SG_[0-9a-f]{12}>$/.test(crOut), JSO
 const proseOut = await runPre('第一行文字\n第二行文字继续');
 check('普通换行不误伤', proseOut === '第一行文字\n第二行文字继续', JSON.stringify(proseOut));
 
+/* ------------------------------------------------ short password floor -- */
+
+console.log('password floor');
+
+const six = await runPre('我的密码是 123456');
+check('中文语境 6 位密码也拦', /我的密码是 <SG_[0-9a-f]{12}>$/.test(six), JSON.stringify(six));
+
+const five = await runPre('我的密码是 12345');
+check('5 位仍不拦', five === '我的密码是 12345', JSON.stringify(five));
+
+const english = await runPre('the secret is hidden');
+check('英文句子里 6 字单词不误伤', english === 'the secret is hidden', JSON.stringify(english));
+
 /* --------------------------------------------------------------------- */
 
 fs.rmSync(TEMP_HOME, { recursive: true, force: true });
