@@ -110,11 +110,13 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 
 赋值和环境变量：`password=`、`secret:`、`api_key:`、`SECRET_KEY=`、`DB_PASSWORD=`。
 
-中文说法：`数据库密码是…`、`我的 token 是…`。
+中文说法：`数据库密码是…`、`我的 token 是…`。中文语境的密码从 6 位起就拦（`我的密码是 123456`），因为 6 位数字密码很常见；英文和 `key=value` 形式从 8 位起，否则 `the secret is hidden` 里的 `hidden` 会被当成密码。
 
 连接串：`mysql://user:pass@host`、`postgresql://…`、JDBC 参数里的 `password=`、`X-Api-Key:`。
 
 命令行：`mysql -uroot -pabc12345`、`redis-cli -a xxx`。只认这几个客户端，`docker run -p 8080:80` 不会被误伤。
+
+被换行打断的 key 也认：从网页、截图或终端里粘贴时，`sk-proj-…` 常被插进 `\r`、`\n` 或 `\r\n`（`\r` 在界面上看着仍是同一行）。这类会按跨行匹配，把两段拼回完整值再入库，占位符与不换行时完全相同。
 
 **可选的熵值检测，默认关闭。** `rules.json` 里加 `"entropy": true` 才会开。它抓的是没有前缀的随机串，但只对 base64 或混合字符集有用（熵约 4.8 到 5.0 bits/char）。纯 hex 串的上限就是 4.0，永远够不到 4.5 的默认阈值，所以 `8f3a9b2c…` 这种开了也抓不到；把阈值降到 3.9 又会误伤英文长句。另外 base64 图片、commit hash、UUID 都会被判成高熵。
 
