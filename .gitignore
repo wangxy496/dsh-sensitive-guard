@@ -1,0 +1,15 @@
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# never commit vault material, even though it lives outside this directory
+vault.json
+vault.key
+vault.json.tmp
+exports/
+rules.json
+
+# local test leftovers
+*.tmp
+test-out/

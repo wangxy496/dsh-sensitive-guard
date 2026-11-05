@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "title": "Sensitive guard",
+    "description": "Replaces keys, tokens and passwords with <SG_> placeholders before they enter model context; plaintext stays in a local encrypted vault. Click the lock in Settings to reveal, or use sensitive_guard_export to write a protected file for command use."
+  },
+  "ui": {
+    "nav": "Sensitive guard",
+    "heading": "Sensitive data",
+    "intro": "These plaintexts live only in the local vault. Sessions and model context carry <SG_> placeholders; click the lock on the right to reveal a value temporarily.",
+    "loading": "Loading…",
+    "empty": "Nothing protected yet. Keys, tokens and passwords found in input or tool results are captured automatically.",
+    "error": "Failed to load",
+    "reveal": "Show secret",
+    "hide": "Hide secret",
+    "refresh": "Refresh",
+    "autoHide": "Re-masks in 20 seconds",
+    "colValue": "Value",
+    "colKind": "Rule",
+    "colTime": "Captured",
+    "colHits": "Hits",
+    "stats": "{count} entries · actions stay on this machine",
+    "placeholder": "Context placeholder format: <SG_hex>",
+    "usage": "For the agent: sensitive_guard_export writes the plaintext to a 0600 file; reference it as \"$(cat <path>)\" so plaintext never enters context."
+  }
+}

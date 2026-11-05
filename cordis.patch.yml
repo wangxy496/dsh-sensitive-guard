@@ -1,0 +1,3 @@
+- insert:
+    - id: sensitive-guard
+      name: 'dsh-sensitive-guard'

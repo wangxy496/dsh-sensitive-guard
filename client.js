@@ -1,0 +1,718 @@
+/**
+ * Browser half of dsh-sensitive-guard: the Settings → 敏感保护 page
+ * (WorkBuddy 敏感数据管理 equivalent). Lists vault metadata and reveals one
+ * plaintext on demand through POST /guard/reveal (same-origin, audited,
+ * auto re-masks after 20s). No DOM outside this component.
+ */
+
+window.__ModuleLoader__.load({
+  id: 'dsh-sensitive-guard',
+  factory: (require) => {
+    const React = require('react');
+    const h = React.createElement;
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /** Dictionary namespace owned by this plugin. */
+    const NS = 'sensitiveGuard';
+    const zh = {
+      nav: '敏感保护',
+      heading: '敏感数据管理',
+      intro: '以下明文只保存在本机保管库。会话与模型上下文里只有 <SG_> 占位符；点右侧小锁可临时查看真实值。',
+      loading: '载入中…',
+      empty: '暂无被保护的敏感数据。输入或工具结果里出现密钥、令牌、密码时会自动入库。',
+      error: '载入失败',
+      reveal: '显示明文',
+      hide: '隐藏明文',
+      refresh: '刷新',
+      autoHide: '20 秒后自动重新遮挡',
+      colValue: '值',
+      colKind: '规则',
+      colTime: '入库时间',
+      colHits: '命中',
+      stats: '共 {count} 条 · 揭示只记录在本机',
+      placeholder: '上下文占位符格式：<SG_十六进制>',
+      usage: '模型侧取用：sensitive_guard_export 工具把明文写入 0600 文件，命令里用 "$(cat <路径>)" 引用，明文不进上下文。',
+      statusOn: '保护中',
+      statusOff: '已暂停',
+      pause30: '暂停 30 分钟',
+      pause120: '暂停 2 小时',
+      pauseRestart: '暂停到重启',
+      pauseRestartLeft: '重启前不再脱敏',
+      resume: '恢复保护',
+      pausedHint: '暂停期间不做任何脱敏，明文会直接进入上下文与日志。到期自动恢复。',
+      lanExposed: '⚠ 本页经局域网访问（允许网段：{cidrs}）。这条链路上的明文与预览对该网段可见，用完建议把 allowCidrs 收回。',
+      restrictedTitle: '只读：这台机器不是服务所在的本机',
+      restrictedBody: '服务端默认只接受本机回环，所以这里能看到“有哪些凭据被保护”，看不到值。当前访问地址：{host}',
+      restrictedFile: '要在这里查看或揭示明文，二选一。① 在服务所在机器上编辑下面这个文件，加一行：',
+      restrictedAlt: '② 或者直接在服务所在机器的浏览器打开 http://127.0.0.1:<端口>。',
+      restrictedUnlock: '需在服务所在的本机打开才能揭示',
+    };
+    const en = {
+      nav: 'Sensitive guard',
+      heading: 'Sensitive data',
+      intro: 'These plaintexts live only in the local vault. Sessions and model context carry <SG_> placeholders; click the lock on the right to reveal a value temporarily.',
+      loading: 'Loading…',
+      empty: 'Nothing protected yet. Keys, tokens and passwords found in input or tool results are captured automatically.',
+      error: 'Failed to load',
+      reveal: 'Show secret',
+      hide: 'Hide secret',
+      refresh: 'Refresh',
+      autoHide: 'Re-masks in 20 seconds',
+      colValue: 'Value',
+      colKind: 'Rule',
+      colTime: 'Captured',
+      colHits: 'Hits',
+      stats: '{count} entries · reveals stay on this machine',
+      placeholder: 'Context placeholder format: <SG_hex>',
+      usage: 'For the agent: sensitive_guard_export writes the plaintext to a 0600 file; reference it as "$(cat <path>)" so plaintext never enters context.',
+      statusOn: 'Protecting',
+      statusOff: 'Paused',
+      pause30: 'Pause 30 min',
+      pause120: 'Pause 2 h',
+      pauseRestart: 'Pause until restart',
+      pauseRestartLeft: 'No masking until restart',
+      resume: 'Resume',
+      pausedHint: 'Nothing is masked while paused — plaintext reaches context and logs. Re-arms automatically.',
+      lanExposed: '⚠ This page is served over LAN (allowed: {cidrs}). Plaintext and previews on this route are visible to that network; narrow allowCidrs when you are done.',
+      restrictedTitle: 'Read-only: this machine is not the one running the server',
+      restrictedBody: 'The server only accepts loopback by default, so you can see which credentials are protected, but not their values. Current address: {host}',
+      restrictedFile: 'To view or reveal values here, pick one. ① On the server machine, edit this file and add one line:',
+      restrictedAlt: '② Or open http://127.0.0.1:<port> in a browser on that machine.',
+      restrictedUnlock: 'Reveal requires the browser on the server machine',
+    };
+
+    const REVEAL_MS = 20_000;
+    const POLL_MS = 30_000;
+
+    const boxStyle = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      padding: '8px 12px',
+      borderRadius: 12,
+      background: 'var(--dsw-alias-bg-layer-1)',
+      border: '1px solid var(--dsw-alias-border-l2)',
+      overflow: 'hidden',
+    };
+    const monoStyle = {
+      fontFamily: 'var(--dsw-alias-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
+      fontSize: 13,
+      fontVariantNumeric: 'tabular-nums',
+    };
+    const btnStyle = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 30,
+      height: 30,
+      flex: 'none',
+      padding: 0,
+      borderRadius: 8,
+      background: 'transparent',
+      border: '1px solid var(--dsw-alias-border-l2)',
+      color: 'var(--dsw-alias-label-primary)',
+      cursor: 'pointer',
+    };
+    const focusCss = '.dsguard-btn:focus-visible{outline:var(--dsw-focus-ring-width,2px) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}';
+
+    function LockGlyph({ open }) {
+      return h('svg', { width: 15, height: 15, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.3, 'aria-hidden': 'true' },
+        h('rect', { x: 3, y: 7.5, width: 10, height: 6.5, rx: 1.6 }),
+        h('path', { d: open ? 'M5.5 7.5V5.5a2.5 2.5 0 0 1 4.9-.7' : 'M5.5 7.5V5.5a2.5 2.5 0 0 1 5 0v2' }));
+    }
+
+    function formatLeft(ms) {
+      const total = Math.max(0, Math.ceil((Number(ms) || 0) / 1000));
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    /**
+     * Shown when the page is opened from another machine and that peer is not
+     * in `allowCidrs`. Read-only: structure yes, values no. The whole point is
+     * that the fix (one JSON line, or open 127.0.0.1) is right here on screen.
+     */
+    function RestrictedNotice({ t, host, suggested, dataDir }) {
+      const cidr = suggested || '192.168.0.0/16';
+      const snippet = `{\n  "allowCidrs": ["${cidr}"]\n}`;
+      const file = dataDir ? `${dataDir}${dataDir.endsWith('/') || dataDir.endsWith('\\') ? '' : '/'}rules.json` : 'rules.json';
+      return h('div', {
+        style: {
+          display: 'grid',
+          gap: 8,
+          padding: '10px 12px',
+          borderRadius: 10,
+          border: '1px solid rgba(239,159,39,0.55)',
+          background: 'rgba(239,159,39,0.10)',
+        },
+      },
+        h('span', { style: { fontSize: 12, fontWeight: 500, color: 'var(--dsw-alias-state-warn-label)' } },
+          `⚠ ${t('restrictedTitle')}`),
+        h('p', { style: { fontSize: 11.5, lineHeight: 1.65, margin: 0, color: 'var(--dsw-alias-label-secondary)' } },
+          t('restrictedBody', { host: host || '—' })),
+        h('p', { style: { fontSize: 11.5, lineHeight: 1.65, margin: 0, color: 'var(--dsw-alias-label-secondary)' } },
+          t('restrictedFile')),
+        h('code', {
+          style: {
+            ...monoStyle,
+            display: 'block',
+            padding: '8px 10px',
+            borderRadius: 8,
+            background: 'var(--dsw-alias-bg-layer-1)',
+            border: '1px solid var(--dsw-alias-border-l2)',
+            fontSize: 11.5,
+            lineHeight: 1.6,
+            whiteSpace: 'pre',
+            userSelect: 'text',
+          },
+        }, `${file}\n${snippet}`),
+        h('p', { style: { fontSize: 11.5, lineHeight: 1.65, margin: 0, color: 'var(--dsw-alias-label-secondary)' } },
+          t('restrictedAlt')));
+    }
+
+    function GuardView({ t }) {
+      const [data, setData] = useState(null);
+      const [status, setStatus] = useState('loading');
+      const [shown, setShown] = useState({});
+      const [guard, setGuard] = useState(null);
+      // Set when the server explains a rejection; keeps the page actionable
+      // instead of showing a bare "failed to load".
+      const [denied, setDenied] = useState(null);
+      const timers = useRef({});
+      const alive = useRef(true);
+
+      const load = useCallback(async (signal) => {
+        try {
+          const res = await fetch('/guard/vault', { cache: 'no-store', signal });
+          const json = await res.json().catch(() => null);
+          if (!alive.current) return;
+          if (!res.ok) {
+            setDenied(json && (json.hint || json.suggested)
+              ? { host: json.host || '', suggested: json.suggested || '', hint: json.hint || '' }
+              : { host: '', suggested: '', hint: '' });
+            setStatus('error');
+            return;
+          }
+          setDenied(null);
+          setData(json);
+          setStatus('ready');
+        } catch (error) {
+          if (!alive.current || (error && error.name === 'AbortError')) return;
+          setStatus('error');
+        }
+      }, []);
+
+      useEffect(() => {
+        alive.current = true;
+        const controller = new AbortController();
+        load(controller.signal);
+        const poll = window.setInterval(() => load(controller.signal), POLL_MS);
+        const timersRef = timers.current;
+        return () => {
+          alive.current = false;
+          controller.abort();
+          window.clearInterval(poll);
+          Object.values(timersRef).forEach((id) => window.clearTimeout(id));
+        };
+      }, [load]);
+
+      const reveal = useCallback(async (ph) => {
+        try {
+          const res = await fetch('/guard/reveal', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ placeholder: ph }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          if (!alive.current) return;
+          setShown((prev) => ({ ...prev, [ph]: json.plaintext }));
+          window.clearTimeout(timers.current[ph]);
+          timers.current[ph] = window.setTimeout(() => {
+            setShown((prev) => {
+              const next = { ...prev };
+              delete next[ph];
+              return next;
+            });
+          }, REVEAL_MS);
+        } catch {
+          /* keep masked; the row simply stays closed */
+        }
+      }, []);
+
+      const toggle = useCallback((ph) => {
+        if (shown[ph]) {
+          window.clearTimeout(timers.current[ph]);
+          setShown((prev) => {
+            const next = { ...prev };
+            delete next[ph];
+            return next;
+          });
+        } else {
+          reveal(ph);
+        }
+      }, [shown, reveal]);
+
+      const loadGuard = useCallback(async () => {
+        try {
+          const res = await fetch('/guard/settings', { cache: 'no-store' });
+          if (res.ok) setGuard(await res.json());
+        } catch { /* leave the last known state */ }
+      }, []);
+
+      const applyPause = useCallback(async (payload) => {
+        try {
+          const res = await fetch('/guard/settings', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) setGuard(await res.json());
+        } catch { /* ignore */ }
+      }, []);
+
+      useEffect(() => { loadGuard(); }, [loadGuard]);
+
+      const paused = Boolean(guard && guard.paused);
+      const untilRestart = Boolean(guard && guard.untilRestart);
+
+      useEffect(() => {
+        if (!paused || untilRestart) return undefined;
+        const id = window.setInterval(() => {
+          setGuard((prev) => {
+            if (!prev || !prev.paused) return prev;
+            const left = (prev.remainingMs || 0) - 1000;
+            if (left <= 0) { loadGuard(); return prev; }
+            return { ...prev, remainingMs: left };
+          });
+        }, 1000);
+        return () => window.clearInterval(id);
+      }, [paused, untilRestart, loadGuard]);
+
+      const entries = (data && data.entries) || [];
+      const access = (data && data.access) || denied || {};
+      // Either the server degraded us to metadata-only, or it refused outright.
+      const restricted = Boolean(data && data.restricted) || Boolean(denied);
+
+      return h('div', { style: { display: 'grid', gap: 14 } },
+        h('style', {}, focusCss),
+        restricted
+          ? h(RestrictedNotice, {
+            t,
+            host: access.host,
+            suggested: access.suggested,
+            dataDir: data && data.dataDir,
+          })
+          : h('div', {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flexWrap: 'wrap',
+            padding: '8px 12px',
+            borderRadius: 10,
+            border: `1px solid ${paused ? 'rgba(239,159,39,0.55)' : 'var(--dsw-alias-border-l2)'}`,
+            background: paused ? 'rgba(239,159,39,0.12)' : 'var(--dsw-alias-bg-layer-1)',
+          },
+        },
+          h('span', {
+            style: {
+              fontSize: 12,
+              fontWeight: 500,
+              color: paused ? 'var(--dsw-alias-state-warn-label)' : 'var(--dsw-alias-label-primary)',
+            },
+          }, paused ? `● ${t('statusOff')}` : `● ${t('statusOn')}`),
+          paused
+            ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } },
+              untilRestart ? t('pauseRestartLeft') : formatLeft(guard && guard.remainingMs))
+            : null,
+          h('span', { style: { flex: 1 } }),
+          paused
+            ? h('button', {
+              type: 'button',
+              className: 'dsguard-btn',
+              style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12 },
+              onClick: () => applyPause({ action: 'resume' }),
+            }, t('resume'))
+            : [
+              h('button', {
+                key: 'p30', type: 'button', className: 'dsguard-btn',
+                style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12 },
+                onClick: () => applyPause({ action: 'pause', minutes: 30 }),
+              }, t('pause30')),
+              h('button', {
+                key: 'p120', type: 'button', className: 'dsguard-btn',
+                style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12 },
+                onClick: () => applyPause({ action: 'pause', minutes: 120 }),
+              }, t('pause120')),
+              h('button', {
+                key: 'pr', type: 'button', className: 'dsguard-btn',
+                style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12 },
+                onClick: () => applyPause({ action: 'pause', untilRestart: true }),
+              }, t('pauseRestart')),
+            ]),
+        paused
+          ? h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } }, t('pausedHint'))
+          : null,
+        data && data.access && data.access.level === 'lan'
+          ? h('p', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } },
+            t('lanExposed', { cidrs: (data.access.allowCidrs || []).join(', ') || '-' }))
+          : null,
+        h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' } },
+          h('h3', { style: { fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--dsw-alias-label-primary)' } }, t('heading')),
+          data ? h('span', { style: { fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, t('stats', { count: String(entries.length) })) : null,
+          h('button', {
+            type: 'button',
+            className: 'dsguard-btn',
+            style: { ...btnStyle, width: 'auto', padding: '0 10px', marginLeft: 'auto', fontSize: 12, gap: 6 },
+            onClick: () => load(),
+          }, t('refresh'))),
+        h('p', { style: { fontSize: 12, lineHeight: 1.6, color: 'var(--dsw-alias-label-secondary)', margin: 0 } }, t('intro')),
+        status === 'loading' && !data
+          ? h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, t('loading'))
+          : status === 'error' && !data
+            ? (denied ? null : h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-state-error-primary)' } }, t('error')))
+            : entries.length === 0
+              ? h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, t('empty'))
+              : h('div', { style: { display: 'grid', gap: 8 } },
+                h('div', {
+                  style: { display: 'flex', gap: 10, padding: '0 12px', fontSize: 11, color: 'var(--dsw-alias-label-dimmed)' },
+                },
+                  h('span', { style: { flex: '1 1 46%' } }, t('colValue')),
+                  h('span', { style: { flex: '0 0 90px' } }, t('colKind')),
+                  h('span', { style: { flex: '0 0 140px' } }, t('colTime')),
+                  h('span', { style: { flex: '0 0 48px' } }, t('colHits')),
+                  h('span', { style: { flex: '0 0 30px' } }, '')),
+                ...entries.map((entry) => {
+                  const revealed = Boolean(shown[entry.ph]);
+                  const value = revealed ? shown[entry.ph] : (entry.preview || entry.ph);
+                  return h('div', { key: entry.ph, style: boxStyle },
+                    h('span', { style: { flex: '1 1 46%', minWidth: 0, display: 'grid', gap: 2 } },
+                      h('span', {
+                        style: {
+                          ...monoStyle,
+                          color: revealed ? 'var(--dsw-alias-state-warn-label)' : 'var(--dsw-alias-label-primary)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        },
+                        title: revealed ? undefined : entry.ph,
+                      }, value),
+                      h('span', { style: { ...monoStyle, fontSize: 11, color: 'var(--dsw-alias-label-dimmed)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.ph)),
+                    h('span', { style: { flex: '0 0 90px', fontSize: 12, color: 'var(--dsw-alias-label-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.rule),
+                    h('span', { style: { flex: '0 0 140px', fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, formatTime(entry.createdAt)),
+                    h('span', { style: { flex: '0 0 48px', fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, String(entry.hits)),
+                    h('button', {
+                      type: 'button',
+                      className: 'dsguard-btn',
+                      style: { ...btnStyle, opacity: restricted ? 0.45 : 1, cursor: restricted ? 'not-allowed' : 'pointer' },
+                      'aria-pressed': revealed,
+                      'aria-label': restricted ? t('restrictedUnlock') : t(revealed ? 'hide' : 'reveal'),
+                      title: restricted ? t('restrictedUnlock') : t(revealed ? 'hide' : 'reveal'),
+                      disabled: restricted,
+                      onClick: () => { if (!restricted) toggle(entry.ph); },
+                    }, h(LockGlyph, { open: revealed })));
+                }),
+                revealedAny(shown)
+                  ? h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } }, t('autoHide'))
+                  : null),
+        h('p', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-dimmed)', margin: 0 } }, `${t('placeholder')} · ${t('usage')}`),
+        h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-label-dimmed)', margin: 0 } }, `inline reveal: ${inlineState}`),
+        data && data.lastError
+          ? h('p', { style: { fontSize: 11, color: 'var(--dsh-alias-state-error-primary, var(--dsw-alias-state-error-primary))', margin: 0 } }, `lastError: ${data.lastError}`)
+          : null);
+    }
+
+    function revealedAny(shown) {
+      return Object.keys(shown).length > 0;
+    }
+
+    const PH_RE = /<SG_[0-9a-f]{12}>/g;
+    /** Visible in Settings so a broken registration is diagnosable without DevTools. */
+    let inlineState = 'unknown';
+
+    /** Colour by what leaked, not by which regex fired. */
+    const TONES = {
+      password: { bg: 'rgba(226,75,74,0.16)', border: 'rgba(226,75,74,0.55)' },
+      token: { bg: 'rgba(127,119,221,0.18)', border: 'rgba(127,119,221,0.55)' },
+      key: { bg: 'rgba(29,158,117,0.18)', border: 'rgba(29,158,117,0.55)' },
+      other: { bg: 'rgba(85,135,200,0.16)', border: 'rgba(85,135,200,0.5)' },
+    };
+
+    const TONE_RULES = [
+      [/password|passwd|pwd|密码|口令|凭证|私钥/i, 'password'],
+      [/token|jwt|bearer|令牌/i, 'token'],
+      [/key|密钥|secret/i, 'key'],
+    ];
+
+    function toneOf(label) {
+      const name = String(label || '');
+      for (const [re, tone] of TONE_RULES) if (re.test(name)) return TONES[tone];
+      return TONES.other;
+    }
+
+    /** placeholder → vault metadata, so a chip can colour itself on first paint. */
+    let metaByPh = new Map();
+    let metaInflight = null;
+
+    function loadMeta() {
+      if (metaInflight) return metaInflight;
+      metaInflight = fetch('/guard/vault', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => {
+          if (json && Array.isArray(json.entries)) {
+            metaByPh = new Map(json.entries.map((e) => [e.ph, e]));
+          }
+          return metaByPh;
+        })
+        .catch(() => metaByPh)
+        .finally(() => { metaInflight = null; });
+      return metaInflight;
+    }
+
+    /**
+     * Inline chip for a `<SG_…>` placeholder inside a user message. Clicking it
+     * asks the host for the plaintext (`/guard/reveal`, loopback-only) and
+     * re-masks on its own. The plaintext never enters model context: this is a
+     * browser fetch, not a tool result.
+     */
+    function RevealChip({ ph, interactive }) {
+      const [value, setValue] = useState(null);
+      const [busy, setBusy] = useState(false);
+      const [tone, setTone] = useState(() => {
+        const entry = metaByPh.get(ph);
+        return toneOf(entry && (entry.label || entry.rule));
+      });
+      const timer = useRef(0);
+
+      useEffect(() => () => window.clearTimeout(timer.current), []);
+
+      useEffect(() => {
+        if (metaByPh.has(ph)) return undefined;
+        let alive = true;
+        loadMeta().then((map) => {
+          if (!alive) return;
+          const entry = map.get(ph);
+          if (entry) setTone(toneOf(entry.label || entry.rule));
+        });
+        return () => { alive = false; };
+      }, [ph]);
+
+      const toggle = useCallback(async () => {
+        if (value !== null) {
+          window.clearTimeout(timer.current);
+          setValue(null);
+          return;
+        }
+        if (busy) return;
+        setBusy(true);
+        try {
+          const res = await fetch('/guard/reveal', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ placeholder: ph }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          // The chip sits immediately after the vendor prefix (`sk-`), so it must
+          // show only the tail — otherwise revealing reads as `sk-sk-abc123`.
+          setValue(typeof json.body === 'string' && json.body.length > 0 ? json.body : json.plaintext);
+          window.clearTimeout(timer.current);
+          timer.current = window.setTimeout(() => setValue(null), REVEAL_MS);
+        } catch {
+          /* remain masked */
+        } finally {
+          setBusy(false);
+        }
+      }, [value, busy, ph]);
+
+      return h('span', {
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 0,
+          padding: '0 1px 0 7px',
+          margin: '0 2px',
+          borderRadius: 6,
+          border: `1px solid ${tone.border}`,
+          background: value !== null ? 'rgba(212,90,48,0.20)' : tone.bg,
+          fontFamily: 'var(--dsw-alias-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
+          fontSize: '0.92em',
+          lineHeight: 1.5,
+          verticalAlign: 'baseline',
+          whiteSpace: 'nowrap',
+        },
+      },
+        h('span', {
+          style: {
+            color: value !== null ? 'var(--dsw-alias-state-warn-label)' : 'var(--dsw-alias-label-secondary)',
+            userSelect: value !== null ? 'text' : 'none',
+          },
+          title: value !== null ? undefined : ph,
+        }, value !== null ? value : ph),
+        interactive === false
+          ? null
+          : h('button', {
+            type: 'button',
+            className: 'dsguard-btn',
+            style: {
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 18,
+              height: 18,
+              flex: 'none',
+              padding: 0,
+              borderRadius: 5,
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--dsw-alias-label-secondary)',
+              cursor: 'pointer',
+            },
+            'aria-pressed': value !== null,
+            'aria-label': value !== null ? '隐藏明文' : '显示明文',
+            title: value !== null ? '隐藏明文' : '显示明文',
+            disabled: busy,
+            onClick: toggle,
+          }, h(LockGlyph, { open: value !== null })));
+    }
+
+    /**
+     * Hosts contributed by the conversation package. Everything here is
+     * best-effort: a missing service or a changed slot contract must degrade to
+     * "placeholder shown as plain text", never break the message list.
+     */
+    function registerInlineReveal(ctx, slots) {
+      const install = (conv) => {
+        if (!conv || !conv.userText || typeof conv.userText.register !== 'function') {
+          inlineState = 'no-service';
+          return;
+        }
+
+        try {
+          conv.userText.register({
+            id: 'sensitive-guard',
+            order: 20,
+            match(text, from) {
+              PH_RE.lastIndex = from;
+              const m = PH_RE.exec(text);
+              if (m === null) return undefined;
+              return {
+                id: 'sensitive-guard',
+                start: m.index,
+                end: m.index + m[0].length,
+                data: { ph: m[0] },
+              };
+            },
+          });
+        } catch (error) {
+          inlineState = 'matcher-failed';
+          console.warn('[sensitive-guard] userText rule registration failed:', error && error.message);
+          return;
+        }
+
+        try {
+          // Keyed child slot: it matches on `key`, not `id`, and the injector is
+          // a generator whose yielded disposers the slot owns. Registering with
+          // `id` silently falls through to "missing renderer", which shows the
+          // original fragment — the placeholder stays plain text.
+          slots.inject('conversation.user.text.node', function* () {
+            try {
+              yield slots.register({
+                name: 'conversation.user.text.node',
+                key: 'sensitive-guard',
+                priority: 100,
+              }, (props) => h(RevealChip, {
+                ph: props && props.node && props.node.data ? props.node.data.ph : '',
+                interactive: props ? props.interactive : true,
+              }));
+              inlineState = 'ok';
+            } catch (error) {
+              inlineState = 'renderer-failed';
+              console.warn('[sensitive-guard] inline renderer registration failed:', error && error.message);
+            }
+          });
+        } catch (error) {
+          inlineState = 'slot-inject-failed';
+          console.warn('[sensitive-guard] conversation slot injection failed:', error && error.message);
+        }
+      };
+
+      // `ctx.get` is a one-shot probe. On a cold boot the conversation package
+      // may not have provided `uiConversation` yet: it returns undefined, and the
+      // chip then stays off for the whole session. That is exactly why the lock
+      // showed up on one launch and disappeared on the next. Declare the
+      // dependency instead — cordis calls back when the service arrives, and
+      // again if it is re-created.
+      let ready = null;
+      try {
+        ready = typeof ctx.get === 'function' ? ctx.get('uiConversation') : null;
+      } catch {
+        /* not provided yet; fall through to the declared wait */
+      }
+      if (ready) {
+        install(ready);
+        return;
+      }
+
+      inlineState = 'waiting';
+      try {
+        ctx.inject(['uiConversation'], (sub) => install(sub.uiConversation));
+      } catch (error) {
+        inlineState = 'no-service';
+        console.warn('[sensitive-guard] cannot wait for uiConversation:', error && error.message);
+      }
+    }
+
+    function formatTime(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '';
+      return d.toLocaleString(undefined, { hour12: false });
+    }
+
+    function apply(ctx) {
+      // The host is fail-fast: a throwing client entry stops the entire app from
+      // booting ("web boot: 1 entry did not activate"). Never let one plugin do that.
+      try {
+        applyEntry(ctx);
+      } catch (error) {
+        console.warn('[sensitive-guard] plugin disabled after error:', error && error.message);
+      }
+    }
+
+    function applyEntry(ctx) {
+      const slots = ctx && ctx.slots;
+      if (!slots || typeof slots.inject !== 'function' || typeof slots.register !== 'function') return;
+      // Inline reveal only needs slots, so register it before the settings page —
+      // a missing locale service must not cost users the in-conversation lock.
+      registerInlineReveal(ctx, slots);
+      const locale = ctx && ctx.locale;
+      if (!locale) return;
+      if (typeof locale.register !== 'function' || typeof locale.bind !== 'function') return;
+      try {
+        ctx.effect(() => locale.register(NS, { zh, en }), 'sensitive-guard: dictionaries');
+      } catch (error) {
+        console.warn('[sensitive-guard] dictionary registration failed:', error && error.message);
+      }
+      const t = locale.bind(NS);
+      slots.inject('settings.section', () => {
+        try {
+          return slots.register({
+            name: 'settings.section',
+            id: 'sensitive-guard',
+            order: 60,
+            label: () => t('nav'),
+            locale: NS,
+            inject: () => ({ t }),
+          }, () => h(GuardView, { t }));
+        } catch (error) {
+          console.warn('[sensitive-guard] settings section registration failed:', error && error.message);
+          return undefined;
+        }
+      });
+    }
+
+    return { inject: ['slots', 'locale'], apply };
+  },
+});
