@@ -1,5 +1,11 @@
 # 变更记录
 
+## 0.3.3
+
+- 修复被换行打断的厂商 key 识别不到：从网页或截图里粘贴时，`sk-proj-…` 常被插进 `\r`、`\n` 或 `\r\n`，而所有单行规则都会在断点处失配。新增 `wrapped-key` 规则，跨行匹配后把值里的空白去掉再入库，因此与完整写法共用同一个占位符。
+- 新增 `debug.pre`（只出现在 `/guard/vault`，未授权来源不返回）：记录 pre-step 每次调用的 payload 字段、消息数、`kind` 与退出阶段，用于确认宿主升级后钩子是否仍然生效。
+- 自测 56 → 61 项，覆盖 CRLF、纯 CR、占位符复用与「普通换行不误伤」。
+
 ## 0.3.2
 
 - `exports` 增加 `./package.json`，修掉 `require('dsh-sensitive-guard/package.json')` 报 `ERR_PACKAGE_PATH_NOT_EXPORTED`。

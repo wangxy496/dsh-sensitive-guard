@@ -34,7 +34,7 @@ import path from 'node:path';
 const VAULT_ROUTE = '/guard/vault';
 const REVEAL_ROUTE = '/guard/reveal';
 const SETTINGS_ROUTE = '/guard/settings';
-const PLUGIN_VERSION = '0.3.2';
+const PLUGIN_VERSION = '0.3.3';
 
 /** Stable placeholder form: <SG_ + 12 hex chars of sha256(plaintext) + >. */
 const PH_EXACT = /^<SG_[0-9a-f]{12}>$/;
@@ -317,6 +317,10 @@ function entryViewForModel(entry) {
 
 const BUILTIN_RULES = [
   { id: 'openai-key', group: 0, re: /\bsk-[A-Za-z0-9_-]{16,}\b/g },
+  // A pasted key whose display soft-wrapped: the prefix and the tail land on
+  // different lines, so every single-line rule misses it. `squash` joins the
+  // halves back into one value before it reaches the vault.
+  { id: 'wrapped-key', group: 1, squash: true, re: /\b((?:sk-|sk_|ghp_|glpat-|npm_|hf_|AKIA|ASIA|AIza|whsec_)[A-Za-z0-9_-]{0,32}[ \t]*(?:\r\n|\r|\n)[ \t]*[A-Za-z0-9_-]{12,})/g },
   { id: 'openai-live', group: 0, re: /\bsk_(?:live|test)_[A-Za-z0-9]{16,}\b/g },
   { id: 'github-token', group: 0, re: /\b(?:gh[pousr]_[A-Za-z0-9]{16,}|github_pat_[A-Za-z0-9_]{20,})\b/g },
   { id: 'gitlab-token', group: 0, re: /\bglpat-[A-Za-z0-9_-]{16,}\b/g },
@@ -460,12 +464,17 @@ function findHits(text) {
     let match;
     while ((match = rule.re.exec(scan)) !== null) {
       if (match[0].length === 0) { rule.re.lastIndex += 1; continue; }
-      const value = match[rule.group];
-      if (typeof value !== 'string' || value.length < 6) continue;
+      const raw = match[rule.group];
+      if (typeof raw !== 'string') continue;
+      // A key that got soft-wrapped when pasted carries a line break inside it.
+      // `squash` joins it back so the vault hashes the clean value and the
+      // placeholder stays identical to the unwrapped capture.
+      const value = rule.squash ? raw.replace(/\s+/g, '') : raw;
+      if (value.length < 6) continue;
       if (value.includes(PH_HINT)) continue;
       const range = match.indices && match.indices[rule.group];
-      const offset = range ? range[0] : match.index + match[0].indexOf(value);
-      const end = range ? range[1] : offset + value.length;
+      const offset = range ? range[0] : match.index + match[0].indexOf(raw);
+      const end = range ? range[1] : offset + raw.length;
       // The keyword group (when the rule has one) says *what* leaked — password /
       // token / key — which the rule id alone cannot express for keyword-prose.
       const label = rule.group > 1 && typeof match[1] === 'string' ? match[1] : rule.id;
@@ -551,16 +560,32 @@ function scrubDeep(value, origin, key) {
 
 /* ----------------------------------------------------------------- hooks -- */
 
+/** Last pre-step invocation, exposed via /guard/vault while diagnosing. */
+const debugPre = { at: 0, stage: 'never', msgs: -1, isArray: false, keys: null, kind: null, changed: false, error: null };
+
 function attachHooks(ctx) {
   // Ingress A: user messages entering the step (before the log commit).
   ctx.on('agent/pre-step', async (payload, next) => {
-    const decision = await next();
+    debugPre.at = Date.now();
+    debugPre.stage = 'entered';
+    debugPre.keys = payload && typeof payload === 'object' ? Object.keys(payload) : null;
+    debugPre.isArray = Boolean(payload && Array.isArray(payload.messages));
+    debugPre.msgs = payload && Array.isArray(payload.messages) ? payload.messages.length : -1;
+    let decision;
+    try {
+      decision = await next();
+      debugPre.kind = decision && decision.kind;
+    } catch (error) {
+      debugPre.stage = 'next-threw';
+      debugPre.error = String((error && error.message) || error);
+      throw error;
+    }
     try {
       // A rejected step never enters the log; rewriting its messages would only
       // corrupt the shape the loop reads back.
-      if (!decision || decision.kind !== 'enter') return decision;
-      if (pausedMs() > 0) return decision;
-      if (!payload || !Array.isArray(payload.messages)) return decision;
+      if (!decision || decision.kind !== 'enter') { debugPre.stage = 'skip:kind'; return decision; }
+      if (pausedMs() > 0) { debugPre.stage = 'skip:paused'; return decision; }
+      if (!payload || !Array.isArray(payload.messages)) { debugPre.stage = 'skip:shape'; return decision; }
       let changed = false;
       const messages = payload.messages.map((message) => {
         if (!message || typeof message !== 'object') return message;
@@ -569,9 +594,13 @@ function attachHooks(ctx) {
         changed = true;
         return { ...message, content };
       });
+      debugPre.changed = changed;
+      debugPre.stage = changed ? 'masked' : 'skip:no-hit';
       if (!changed) return decision;
       return { ...decision, messages };
     } catch (error) {
+      debugPre.stage = 'threw';
+      debugPre.error = String((error && error.message) || error);
       lastError = `pre-step: ${String((error && error.message) || error)}`;
       return decision;
     }
@@ -1063,6 +1092,7 @@ function registerRoutes(ctx) {
           suggested: restricted ? suggestCidr(remoteIp(req)) : null,
           host: String(req.headers.host || ''),
         },
+        debug: restricted ? undefined : { pre: { ...debugPre } },
       });
     },
   }), 'sensitive-guard: vault route');

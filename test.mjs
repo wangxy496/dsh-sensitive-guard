@@ -369,6 +369,33 @@ await vaultRoute.handler({ method: 'GET', socket: { remoteAddress: '198.51.100.1
 const allowedBody = JSON.parse(allowedPreview.body || '{}');
 check('allowlisted peer still sees preview', allowedBody.restricted === false && allowedBody.entries.some((e) => 'preview' in e), JSON.stringify(allowedBody.entries[0] || {}));
 
+/* --------------------------------------------------- wrapped / soft wrap -- */
+
+console.log('wrapped key');
+
+const runPre = async (text) => {
+  const decision = await pre(
+    { messages: [{ content: text }] },
+    async () => ({ kind: 'enter', messages: [] }),
+  );
+  // Unchanged text comes back as the mock's empty array; treat that as "as-is".
+  return decision.messages.length ? decision.messages[0].content : text;
+};
+
+const cleanOut = await runPre('我的 api key 是 sk-proj-abcdefghijklmnopqrstuvwx');
+const cleanPh = (cleanOut.match(/<SG_[0-9a-f]{12}>/) || [])[0];
+check('完整 key 正常遮挡', Boolean(cleanPh) && cleanOut.startsWith('我的 api key 是 sk-'), cleanOut);
+
+const crlfOut = await runPre('我的 api key 是 sk-\r\nproj-abcdefghijklmnopqrstuvwx');
+check('CRLF 打断的 key 能识别', /sk-<SG_[0-9a-f]{12}>$/.test(crlfOut) && !crlfOut.includes('proj-'), JSON.stringify(crlfOut));
+check('换行版复用同一个占位符', crlfOut.includes(cleanPh), `${crlfOut} vs ${cleanPh}`);
+
+const crOut = await runPre('我的 api key 是 sk-\rproj-abcdefghijklmnopqrstuvwx');
+check('纯 CR 打断的 key 能识别', /sk-<SG_[0-9a-f]{12}>$/.test(crOut), JSON.stringify(crOut));
+
+const proseOut = await runPre('第一行文字\n第二行文字继续');
+check('普通换行不误伤', proseOut === '第一行文字\n第二行文字继续', JSON.stringify(proseOut));
+
 /* --------------------------------------------------------------------- */
 
 fs.rmSync(TEMP_HOME, { recursive: true, force: true });
