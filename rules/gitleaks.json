@@ -1,0 +1,3178 @@
+{
+  "source": "gitleaks/gitleaks config/gitleaks.toml",
+  "license": "MIT",
+  "generatedAt": "2026-11-06T09:29:49.061Z",
+  "total": 222,
+  "compiled": 221,
+  "skipped": [
+    {
+      "id": "pkcs12-file",
+      "reason": "path-only rule (no text regex)"
+    }
+  ],
+  "rules": [
+    {
+      "id": "1password-secret-key",
+      "name": "1Password Secret Key",
+      "regex": "\\bA3-[A-Z0-9]{6}-(?:(?:[A-Z0-9]{11})|(?:[A-Z0-9]{6}-[A-Z0-9]{5}))-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "a3-"
+      ],
+      "entropy": 3.8,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "1password-service-account-token",
+      "name": "1Password Service Account Token",
+      "regex": "ops_eyJ[a-zA-Z0-9+/]{250,}={0,3}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ops_"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "adafruit-api-key",
+      "name": "Adafruit API Key",
+      "regex": "[\\w.-]{0,50}?(?:adafruit)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9_-]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "adafruit"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "adobe-client-id",
+      "name": "Adobe Client ID",
+      "regex": "[\\w.-]{0,50}?(?:adobe)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "adobe"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "adobe-client-secret",
+      "name": "Adobe Client Secret",
+      "regex": "\\b(p8e-[a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "p8e-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "age-secret-key",
+      "name": "Age Secret Key",
+      "regex": "AGE-SECRET-KEY-1[QPZRY9X8GF2TVDW0S3JN54KHCE6MUA7L]{58}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "age-secret-key-1"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "airtable-api-key",
+      "name": "Airtable API Key",
+      "regex": "[\\w.-]{0,50}?(?:airtable)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{17})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "airtable"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "airtable-personnal-access-token",
+      "name": "Airtable Personnal Access Token",
+      "regex": "\\b(pat[[:alnum:]]{14}\\.[a-f0-9]{64})\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "airtable"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "algolia-api-key",
+      "name": "Algolia API Key",
+      "regex": "[\\w.-]{0,50}?(?:algolia)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "algolia"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "alibaba-access-key-id",
+      "name": "Alibaba Access Key ID",
+      "regex": "\\b(LTAI[a-z0-9]{20})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "ltai"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "alibaba-secret-key",
+      "name": "Alibaba Secret Key",
+      "regex": "[\\w.-]{0,50}?(?:alibaba)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{30})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "alibaba"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "anthropic-admin-api-key",
+      "name": "Anthropic Admin API Key",
+      "regex": "\\b(sk-ant-admin01-[a-zA-Z0-9_\\-]{93}AA)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sk-ant-admin01"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "anthropic-api-key",
+      "name": "Anthropic API Key",
+      "regex": "\\b(sk-ant-api03-[a-zA-Z0-9_\\-]{93}AA)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sk-ant-api03"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "artifactory-api-key",
+      "name": "Artifactory API Key",
+      "regex": "\\bAKCp[A-Za-z0-9]{69}\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "akcp"
+      ],
+      "entropy": 4.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "artifactory-reference-token",
+      "name": "Artifactory Reference Token",
+      "regex": "\\bcmVmd[A-Za-z0-9]{59}\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "cmvmd"
+      ],
+      "entropy": 4.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "asana-client-id",
+      "name": "Asana Client ID",
+      "regex": "[\\w.-]{0,50}?(?:asana)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "asana"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "asana-client-secret",
+      "name": "Asana Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:asana)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "asana"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "atlassian-api-token",
+      "name": "Atlassian API Token",
+      "regex": "[\\w.-]{0,50}?(?:(?:ATLASSIAN|[Aa]tlassian)|(?:CONFLUENCE|[Cc]onfluence)|(?:JIRA|[Jj]ira))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{20}[a-f0-9]{4})(?:[\\x60'\"\\s;]|\\\\[nr]|$)|\\b(ATATT3[A-Za-z0-9_\\-=]{186})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "atlassian",
+        "confluence",
+        "jira",
+        "atatt3"
+      ],
+      "entropy": 3.5,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "authress-service-client-access-key",
+      "name": "Authress Service Client Access Key",
+      "regex": "\\b((?:sc|ext|scauth|authress)_[a-z0-9]{5,30}\\.[a-z0-9]{4,6}\\.(?:acc)[_-][a-z0-9-]{10,32}\\.[a-z0-9+/_=-]{30,120})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sc_",
+        "ext_",
+        "scauth_",
+        "authress_"
+      ],
+      "entropy": 2,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "aws-access-token",
+      "name": "AWS Access Token",
+      "regex": "\\b((?:A3T[A-Z0-9]|AKIA|ASIA|ABIA|ACCA)[A-Z2-7]{16})\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "a3t",
+        "akia",
+        "asia",
+        "abia",
+        "acca"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "aws-amazon-bedrock-api-key-long-lived",
+      "name": "AWS Amazon Bedrock API Key Long Lived",
+      "regex": "\\b(ABSK[A-Za-z0-9+/]{109,269}={0,2})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "absk"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "aws-amazon-bedrock-api-key-short-lived",
+      "name": "AWS Amazon Bedrock API Key Short Lived",
+      "regex": "bedrock-api-key-YmVkcm9jay5hbWF6b25hd3MuY29t",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "bedrock-api-key-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "azure-ad-client-secret",
+      "name": "Azure Ad Client Secret",
+      "regex": "(?:^|[\\\\'\"\\x60\\s>=:(,)])([a-zA-Z0-9_~.]{3}\\dQ~[a-zA-Z0-9_~.-]{31,34})(?:$|[\\\\'\"\\x60\\s<),])",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "q~"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "beamer-api-token",
+      "name": "Beamer API Token",
+      "regex": "[\\w.-]{0,50}?(?:beamer)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(b_[a-z0-9=_\\-]{44})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "beamer"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "bitbucket-client-id",
+      "name": "Bitbucket Client ID",
+      "regex": "[\\w.-]{0,50}?(?:bitbucket)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "bitbucket"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "bitbucket-client-secret",
+      "name": "Bitbucket Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:bitbucket)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "bitbucket"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "bittrex-access-key",
+      "name": "Bittrex Access Key",
+      "regex": "[\\w.-]{0,50}?(?:bittrex)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "bittrex"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "bittrex-secret-key",
+      "name": "Bittrex Secret Key",
+      "regex": "[\\w.-]{0,50}?(?:bittrex)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "bittrex"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "cisco-meraki-api-key",
+      "name": "Cisco Meraki API Key",
+      "regex": "[\\w.-]{0,50}?(?:[\\w.-]{0,50}?(?:(?:[Mm]eraki|MERAKI))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3})(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "meraki"
+      ],
+      "entropy": 3,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "clickhouse-cloud-api-secret-key",
+      "name": "Clickhouse Cloud API Secret Key",
+      "regex": "\\b(4b1d[A-Za-z0-9]{38})\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "4b1d"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "clojars-api-token",
+      "name": "Clojars API Token",
+      "regex": "CLOJARS_[a-z0-9]{60}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "clojars_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "cloudflare-api-key",
+      "name": "Cloudflare API Key",
+      "regex": "[\\w.-]{0,50}?(?:cloudflare)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9_-]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "cloudflare"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "cloudflare-global-api-key",
+      "name": "Cloudflare Global API Key",
+      "regex": "[\\w.-]{0,50}?(?:cloudflare)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{37})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "cloudflare"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "cloudflare-origin-ca-key",
+      "name": "Cloudflare Origin CA Key",
+      "regex": "\\b(v1\\.0-[a-f0-9]{24}-[a-f0-9]{146})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "cloudflare",
+        "v1.0-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "codecov-access-token",
+      "name": "Codecov Access Token",
+      "regex": "[\\w.-]{0,50}?(?:codecov)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "codecov"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "cohere-api-token",
+      "name": "Cohere API Token",
+      "regex": "[\\w.-]{0,50}?(?:[\\w.-]{0,50}?(?:cohere|CO_API_KEY)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3})(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-zA-Z0-9]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "cohere",
+        "co_api_key"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "coinbase-access-token",
+      "name": "Coinbase Access Token",
+      "regex": "[\\w.-]{0,50}?(?:coinbase)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9_-]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "coinbase"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "confluent-access-token",
+      "name": "Confluent Access Token",
+      "regex": "[\\w.-]{0,50}?(?:confluent)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "confluent"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "confluent-secret-key",
+      "name": "Confluent Secret Key",
+      "regex": "[\\w.-]{0,50}?(?:confluent)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "confluent"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "contentful-delivery-api-token",
+      "name": "Contentful Delivery API Token",
+      "regex": "[\\w.-]{0,50}?(?:contentful)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{43})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "contentful"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "curl-auth-header",
+      "name": "Curl Auth Header",
+      "regex": "\\bcurl\\b(?:.*?|.*?(?:[\\r\\n]{1,2}.*?){1,5})[ \\t\\n\\r](?:-H|--header)(?:=|[ \\t]{0,5})(?:\"(?:Authorization:[ \\t]{0,5}(?:Basic[ \\t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \\t]([\\w=~@.+/-]{8,})|([\\w=~@.+/-]{8,}))|(?:(?:X-(?:[a-z]+-)?)?(?:Api-?)?(?:Key|Token)):[ \\t]{0,5}([\\w=~@.+/-]{8,}))\"|'(?:Authorization:[ \\t]{0,5}(?:Basic[ \\t]([a-z0-9+/]{8,}={0,3})|(?:Bearer|(?:Api-)?Token)[ \\t]([\\w=~@.+/-]{8,})|([\\w=~@.+/-]{8,}))|(?:(?:X-(?:[a-z]+-)?)?(?:Api-?)?(?:Key|Token)):[ \\t]{0,5}([\\w=~@.+/-]{8,}))')(?:\\B|\\s|\\z)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "curl"
+      ],
+      "entropy": 2.75,
+      "approx": false,
+      "tier": "loose",
+      "defaultOn": false
+    },
+    {
+      "id": "curl-auth-user",
+      "name": "Curl Auth User",
+      "regex": "\\bcurl\\b(?:.*|.*(?:[\\r\\n]{1,2}.*){1,5})[ \\t\\n\\r](?:-u|--user)(?:=|[ \\t]{0,5})(\"(:[^\"]{3,}|[^:\"]{3,}:|[^:\"]{3,}:[^\"]{3,})\"|'([^:']{3,}:[^']{3,})'|((?:\"[^\"]{3,}\"|'[^']{3,}'|[\\w$@.-]+):(?:\"[^\"]{3,}\"|'[^']{3,}'|[\\w${}@.-]+)))(?:\\s|\\z)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "curl"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "loose",
+      "defaultOn": false
+    },
+    {
+      "id": "databricks-api-token",
+      "name": "Databricks API Token",
+      "regex": "\\b(dapi[a-f0-9]{32}(?:-\\d)?)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "dapi"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "datadog-access-token",
+      "name": "Datadog Access Token",
+      "regex": "[\\w.-]{0,50}?(?:datadog)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "datadog"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "defined-networking-api-token",
+      "name": "Defined Networking API Token",
+      "regex": "[\\w.-]{0,50}?(?:dnkey)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(dnkey-[a-z0-9=_\\-]{26}-[a-z0-9=_\\-]{52})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dnkey"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "digitalocean-access-token",
+      "name": "Digitalocean Access Token",
+      "regex": "\\b(doo_v1_[a-f0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "doo_v1_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "digitalocean-pat",
+      "name": "Digitalocean Pat",
+      "regex": "\\b(dop_v1_[a-f0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "dop_v1_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "digitalocean-refresh-token",
+      "name": "Digitalocean Refresh Token",
+      "regex": "\\b(dor_v1_[a-f0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dor_v1_"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "discord-api-token",
+      "name": "Discord API Token",
+      "regex": "[\\w.-]{0,50}?(?:discord)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "discord"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "discord-client-id",
+      "name": "Discord Client ID",
+      "regex": "[\\w.-]{0,50}?(?:discord)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9]{18})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "discord"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "discord-client-secret",
+      "name": "Discord Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:discord)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "discord"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "doppler-api-token",
+      "name": "Doppler API Token",
+      "regex": "dp\\.pt\\.[a-z0-9]{43}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dp.pt."
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "droneci-access-token",
+      "name": "Droneci Access Token",
+      "regex": "[\\w.-]{0,50}?(?:droneci)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "droneci"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "dropbox-api-token",
+      "name": "Dropbox API Token",
+      "regex": "[\\w.-]{0,50}?(?:dropbox)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{15})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dropbox"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "dropbox-long-lived-api-token",
+      "name": "Dropbox Long Lived API Token",
+      "regex": "[\\w.-]{0,50}?(?:dropbox)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{11}(AAAAAAAAAA)[a-z0-9\\-_=]{43})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dropbox"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "dropbox-short-lived-api-token",
+      "name": "Dropbox Short Lived API Token",
+      "regex": "[\\w.-]{0,50}?(?:dropbox)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(sl\\.[a-z0-9\\-=_]{135})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dropbox"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "duffel-api-token",
+      "name": "Duffel API Token",
+      "regex": "duffel_(?:test|live)_[a-z0-9_\\-=]{43}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "duffel_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "dynatrace-api-token",
+      "name": "Dynatrace API Token",
+      "regex": "dt0c01\\.[a-z0-9]{24}\\.[a-z0-9]{64}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "dt0c01."
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "easypost-api-token",
+      "name": "Easypost API Token",
+      "regex": "\\bEZAK[a-z0-9]{54}\\b",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "ezak"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "easypost-test-api-token",
+      "name": "Easypost Test API Token",
+      "regex": "\\bEZTK[a-z0-9]{54}\\b",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "eztk"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "etsy-access-token",
+      "name": "Etsy Access Token",
+      "regex": "[\\w.-]{0,50}?(?:(?:ETSY|[Ee]tsy))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{24})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "etsy"
+      ],
+      "entropy": 3,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "facebook-access-token",
+      "name": "Facebook Access Token",
+      "regex": "\\b(\\d{15,16}(\\||%)[0-9a-z\\-_]{27,40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "facebook"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "facebook-page-access-token",
+      "name": "Facebook Page Access Token",
+      "regex": "\\b(EAA[MC][a-z0-9]{100,})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "eaam",
+        "eaac"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "facebook-secret",
+      "name": "Facebook Secret",
+      "regex": "[\\w.-]{0,50}?(?:facebook)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "facebook"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "fastly-api-token",
+      "name": "Fastly API Token",
+      "regex": "[\\w.-]{0,50}?(?:fastly)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "fastly"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "finicity-api-token",
+      "name": "Finicity API Token",
+      "regex": "[\\w.-]{0,50}?(?:finicity)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "finicity"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "finicity-client-secret",
+      "name": "Finicity Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:finicity)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{20})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "finicity"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "finnhub-access-token",
+      "name": "Finnhub Access Token",
+      "regex": "[\\w.-]{0,50}?(?:finnhub)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{20})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "finnhub"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "flickr-access-token",
+      "name": "Flickr Access Token",
+      "regex": "[\\w.-]{0,50}?(?:flickr)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "flickr"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "flutterwave-encryption-key",
+      "name": "Flutterwave Encryption Key",
+      "regex": "FLWSECK_TEST-[a-h0-9]{12}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "flwseck_test"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "flutterwave-public-key",
+      "name": "Flutterwave Public Key",
+      "regex": "FLWPUBK_TEST-[a-h0-9]{32}-X",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "flwpubk_test"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "flutterwave-secret-key",
+      "name": "Flutterwave Secret Key",
+      "regex": "FLWSECK_TEST-[a-h0-9]{32}-X",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "flwseck_test"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "flyio-access-token",
+      "name": "Flyio Access Token",
+      "regex": "\\b((?:fo1_[\\w-]{43}|fm1[ar]_[a-zA-Z0-9+\\/]{100,}={0,3}|fm2_[a-zA-Z0-9+\\/]{100,}={0,3}))(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "fo1_",
+        "fm1",
+        "fm2_"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "frameio-api-token",
+      "name": "Frameio API Token",
+      "regex": "fio-u-[a-z0-9\\-_=]{64}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "fio-u-"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "freemius-secret-key",
+      "name": "Freemius Secret Key",
+      "regex": "[\"']secret_key[\"']\\s*=>\\s*[\"'](sk_[\\S]{29})[\"']",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "secret_key"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "freshbooks-access-token",
+      "name": "Freshbooks Access Token",
+      "regex": "[\\w.-]{0,50}?(?:freshbooks)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "freshbooks"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gcp-api-key",
+      "name": "GCP API Key",
+      "regex": "\\b(AIza[\\w-]{35})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "aiza"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "generic-api-key",
+      "name": "Generic API Key",
+      "regex": "[\\w.-]{0,50}?(?:access|auth|(?:[Aa]pi|API)|credential|creds|key|passw(?:or)?d|secret|token)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([\\w.=-]{10,150}|[a-z0-9][a-z0-9+/]{11,}={0,3})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "access",
+        "api",
+        "auth",
+        "key",
+        "credential",
+        "creds",
+        "passwd",
+        "password",
+        "secret",
+        "token"
+      ],
+      "entropy": 3.5,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "github-app-token",
+      "name": "Github App Token",
+      "regex": "(?:ghu|ghs)_[0-9a-zA-Z]{36}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ghu_",
+        "ghs_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "github-fine-grained-pat",
+      "name": "Github Fine Grained Pat",
+      "regex": "github_pat_\\w{82}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "github_pat_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "github-oauth",
+      "name": "Github OAuth",
+      "regex": "gho_[0-9a-zA-Z]{36}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "gho_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "github-pat",
+      "name": "Github Pat",
+      "regex": "ghp_[0-9a-zA-Z]{36}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ghp_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "github-refresh-token",
+      "name": "Github Refresh Token",
+      "regex": "ghr_[0-9a-zA-Z]{36}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ghr_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-cicd-job-token",
+      "name": "Gitlab Cicd Job Token",
+      "regex": "glcbt-[0-9a-zA-Z]{1,5}_[0-9a-zA-Z_-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glcbt-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-deploy-token",
+      "name": "Gitlab Deploy Token",
+      "regex": "gldt-[0-9a-zA-Z_\\-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "gldt-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-feature-flag-client-token",
+      "name": "Gitlab Feature Flag Client Token",
+      "regex": "glffct-[0-9a-zA-Z_\\-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glffct-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-feed-token",
+      "name": "Gitlab Feed Token",
+      "regex": "glft-[0-9a-zA-Z_\\-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glft-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-incoming-mail-token",
+      "name": "Gitlab Incoming Mail Token",
+      "regex": "glimt-[0-9a-zA-Z_\\-]{25}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glimt-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-kubernetes-agent-token",
+      "name": "Gitlab Kubernetes Agent Token",
+      "regex": "glagent-[0-9a-zA-Z_\\-]{50}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glagent-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-oauth-app-secret",
+      "name": "Gitlab OAuth App Secret",
+      "regex": "gloas-[0-9a-zA-Z_\\-]{64}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "gloas-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-pat",
+      "name": "Gitlab Pat",
+      "regex": "glpat-[\\w-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glpat-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-pat-routable",
+      "name": "Gitlab Pat Routable",
+      "regex": "\\bglpat-[0-9a-zA-Z_-]{27,300}\\.[0-9a-z]{2}[0-9a-z]{7}\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glpat-"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-ptt",
+      "name": "Gitlab Ptt",
+      "regex": "glptt-[0-9a-f]{40}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glptt-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-rrt",
+      "name": "Gitlab Rrt",
+      "regex": "GR1348941[\\w-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "gr1348941"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-runner-authentication-token",
+      "name": "Gitlab Runner Authentication Token",
+      "regex": "glrt-[0-9a-zA-Z_\\-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glrt-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-runner-authentication-token-routable",
+      "name": "Gitlab Runner Authentication Token Routable",
+      "regex": "\\bglrt-t\\d_[0-9a-zA-Z_\\-]{27,300}\\.[0-9a-z]{2}[0-9a-z]{7}\\b",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glrt-"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-scim-token",
+      "name": "Gitlab Scim Token",
+      "regex": "glsoat-[0-9a-zA-Z_\\-]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "glsoat-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitlab-session-cookie",
+      "name": "Gitlab Session Cookie",
+      "regex": "_gitlab_session=[0-9a-z]{32}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "_gitlab_session="
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gitter-access-token",
+      "name": "Gitter Access Token",
+      "regex": "[\\w.-]{0,50}?(?:gitter)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9_-]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "gitter"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "gocardless-api-token",
+      "name": "Gocardless API Token",
+      "regex": "[\\w.-]{0,50}?(?:gocardless)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(live_[a-z0-9\\-_=]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "live_",
+        "gocardless"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "grafana-api-key",
+      "name": "Grafana API Key",
+      "regex": "\\b(eyJrIjoi[A-Za-z0-9]{70,400}={0,3})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "eyjrijoi"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "grafana-cloud-api-token",
+      "name": "Grafana Cloud API Token",
+      "regex": "\\b(glc_[A-Za-z0-9+/]{32,400}={0,3})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "glc_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "grafana-service-account-token",
+      "name": "Grafana Service Account Token",
+      "regex": "\\b(glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "glsa_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "harness-api-key",
+      "name": "Harness API Key",
+      "regex": "(?:pat|sat)\\.[a-zA-Z0-9_-]{22}\\.[a-zA-Z0-9]{24}\\.[a-zA-Z0-9]{20}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "pat.",
+        "sat."
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "hashicorp-tf-api-token",
+      "name": "Hashicorp Tf API Token",
+      "regex": "[a-z0-9]{14}\\.(?:atlasv1)\\.[a-z0-9\\-_=]{60,70}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "atlasv1"
+      ],
+      "entropy": 3.5,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "hashicorp-tf-password",
+      "name": "Hashicorp Tf Password",
+      "regex": "[\\w.-]{0,50}?(?:administrator_login_password|password)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(\"[a-z0-9=_\\-]{8,20}\")(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "administrator_login_password",
+        "password"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "heroku-api-key",
+      "name": "Heroku API Key",
+      "regex": "[\\w.-]{0,50}?(?:heroku)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "heroku"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "heroku-api-key-v2",
+      "name": "Heroku API Key V2",
+      "regex": "\\b((HRKU-AA[0-9a-zA-Z_-]{58}))(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "hrku-aa"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "hubspot-api-key",
+      "name": "Hubspot API Key",
+      "regex": "[\\w.-]{0,50}?(?:hubspot)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "hubspot"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "huggingface-access-token",
+      "name": "Huggingface Access Token",
+      "regex": "\\b(hf_(?:[a-z]{34}))(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "hf_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "huggingface-organization-api-token",
+      "name": "Huggingface Organization API Token",
+      "regex": "\\b(api_org_(?:[a-z]{34}))(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "api_org_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "infracost-api-token",
+      "name": "Infracost API Token",
+      "regex": "\\b(ico-[a-zA-Z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ico-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "intercom-api-key",
+      "name": "Intercom API Key",
+      "regex": "[\\w.-]{0,50}?(?:intercom)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{60})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "intercom"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "intra42-client-secret",
+      "name": "Intra42 Client Secret",
+      "regex": "\\b(s-s4t2(?:ud|af)-[abcdef0123456789]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "intra",
+        "s-s4t2ud-",
+        "s-s4t2af-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "jfrog-api-key",
+      "name": "Jfrog API Key",
+      "regex": "[\\w.-]{0,50}?(?:jfrog|artifactory|bintray|xray)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{73})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "jfrog",
+        "artifactory",
+        "bintray",
+        "xray"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "jfrog-identity-token",
+      "name": "Jfrog Identity Token",
+      "regex": "[\\w.-]{0,50}?(?:jfrog|artifactory|bintray|xray)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "jfrog",
+        "artifactory",
+        "bintray",
+        "xray"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "jwt",
+      "name": "JWT",
+      "regex": "\\b(ey[a-zA-Z0-9]{17,}\\.ey[a-zA-Z0-9\\/\\\\_-]{17,}\\.(?:[a-zA-Z0-9\\/\\\\_-]{10,}={0,2})?)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ey"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "jwt-base64",
+      "name": "JWT Base64",
+      "regex": "\\bZXlK(?:(?<alg>aGJHY2lPaU)|(?<apu>aGNIVWlPaU)|(?<apv>aGNIWWlPaU)|(?<aud>aGRXUWlPaU)|(?<b64>aU5qUWlP)|(?<crit>amNtbDBJanBi)|(?<cty>amRIa2lPaU)|(?<epk>bGNHc2lPbn)|(?<enc>bGJtTWlPaU)|(?<jku>cWEzVWlPaU)|(?<jwk>cWQyc2lPb)|(?<iss>cGMzTWlPaU)|(?<iv>cGRpSTZJ)|(?<kid>cmFXUWlP)|(?<key_ops>clpYbGZiM0J6SWpwY)|(?<kty>cmRIa2lPaUp)|(?<nonce>dWIyNWpaU0k2)|(?<p2c>d01tTWlP)|(?<p2s>d01uTWlPaU)|(?<ppt>d2NIUWlPaU)|(?<sub>emRXSWlPaU)|(?<svt>emRuUWlP)|(?<tag>MFlXY2lPaU)|(?<typ>MGVYQWlPaUp)|(?<url>MWNtd2l)|(?<use>MWMyVWlPaUp)|(?<ver>MlpYSWlPaU)|(?<version>MlpYSnphVzl1SWpv)|(?<x>NElqb2)|(?<x5c>NE5XTWlP)|(?<x5t>NE5YUWlPaU)|(?<x5ts256>NE5YUWpVekkxTmlJNkl)|(?<x5u>NE5YVWlPaU)|(?<zip>NmFYQWlPaU))[a-zA-Z0-9\\/\\\\_+\\-\\r\\n]{40,}={0,2}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "zxlk"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "loose",
+      "defaultOn": false
+    },
+    {
+      "id": "kraken-access-token",
+      "name": "Kraken Access Token",
+      "regex": "[\\w.-]{0,50}?(?:kraken)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9\\/=_\\+\\-]{80,90})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "kraken"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "kubernetes-secret-yaml",
+      "name": "Kubernetes Secret YAML",
+      "regex": "(?:\\bkind:[ \\t]*[\"']?\\bsecret\\b[\"']?[\\s\\S]{0,200}?\\bdata:[\\s\\S]{0,100}?\\s+([\\w.-]+:(?:[ \\t]*(?:\\||>[-+]?)\\s+)?[ \\t]*(?:[\"']?[a-z0-9+/]{10,}={0,3}[\"']?|\\{\\{[ \\t\\w\"|$:=,.-]+}}|\"\"|''))|\\bdata:[\\s\\S]{0,100}?\\s+([\\w.-]+:(?:[ \\t]*(?:\\||>[-+]?)\\s+)?[ \\t]*(?:[\"']?[a-z0-9+/]{10,}={0,3}[\"']?|\\{\\{[ \\t\\w\"|$:=,.-]+}}|\"\"|''))[\\s\\S]{0,200}?\\bkind:[ \\t]*[\"']?\\bsecret\\b[\"']?)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "secret"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "loose",
+      "defaultOn": false
+    },
+    {
+      "id": "kucoin-access-token",
+      "name": "Kucoin Access Token",
+      "regex": "[\\w.-]{0,50}?(?:kucoin)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{24})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "kucoin"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "kucoin-secret-key",
+      "name": "Kucoin Secret Key",
+      "regex": "[\\w.-]{0,50}?(?:kucoin)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "kucoin"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "launchdarkly-access-token",
+      "name": "Launchdarkly Access Token",
+      "regex": "[\\w.-]{0,50}?(?:launchdarkly)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "launchdarkly"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "linear-api-key",
+      "name": "Linear API Key",
+      "regex": "lin_api_[a-z0-9]{40}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "lin_api_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "linear-client-secret",
+      "name": "Linear Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:linear)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "linear"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "linkedin-client-id",
+      "name": "Linkedin Client ID",
+      "regex": "[\\w.-]{0,50}?(?:linked[_-]?in)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{14})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "linkedin",
+        "linked_in",
+        "linked-in"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "linkedin-client-secret",
+      "name": "Linkedin Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:linked[_-]?in)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "linkedin",
+        "linked_in",
+        "linked-in"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "lob-api-key",
+      "name": "Lob API Key",
+      "regex": "[\\w.-]{0,50}?(?:lob)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}((live|test)_[a-f0-9]{35})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "test_",
+        "live_"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "lob-pub-api-key",
+      "name": "Lob Pub API Key",
+      "regex": "[\\w.-]{0,50}?(?:lob)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}((test|live)_pub_[a-f0-9]{31})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "test_pub",
+        "live_pub",
+        "_pub"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "looker-client-id",
+      "name": "Looker Client ID",
+      "regex": "[\\w.-]{0,50}?(?:looker)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{20})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "looker"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "looker-client-secret",
+      "name": "Looker Client Secret",
+      "regex": "[\\w.-]{0,50}?(?:looker)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{24})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "looker"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "mailchimp-api-key",
+      "name": "Mailchimp API Key",
+      "regex": "[\\w.-]{0,50}?(?:MailchimpSDK.initialize|mailchimp)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{32}-us\\d\\d)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "mailchimp"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "mailgun-private-api-token",
+      "name": "Mailgun Private API Token",
+      "regex": "[\\w.-]{0,50}?(?:mailgun)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(key-[a-f0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "mailgun"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "mailgun-pub-key",
+      "name": "Mailgun Pub Key",
+      "regex": "[\\w.-]{0,50}?(?:mailgun)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(pubkey-[a-f0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "mailgun"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "mailgun-signing-key",
+      "name": "Mailgun Signing Key",
+      "regex": "[\\w.-]{0,50}?(?:mailgun)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-h0-9]{32}-[a-h0-9]{8}-[a-h0-9]{8})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "mailgun"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "mapbox-api-token",
+      "name": "Mapbox API Token",
+      "regex": "[\\w.-]{0,50}?(?:mapbox)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(pk\\.[a-z0-9]{60}\\.[a-z0-9]{22})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "mapbox"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "mattermost-access-token",
+      "name": "Mattermost Access Token",
+      "regex": "[\\w.-]{0,50}?(?:mattermost)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{26})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "mattermost"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "maxmind-license-key",
+      "name": "Maxmind License Key",
+      "regex": "\\b([A-Za-z0-9]{6}_[A-Za-z0-9]{29}_mmk)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "_mmk"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "messagebird-api-token",
+      "name": "Messagebird API Token",
+      "regex": "[\\w.-]{0,50}?(?:message[_-]?bird)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{25})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "messagebird",
+        "message-bird",
+        "message_bird"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "messagebird-client-id",
+      "name": "Messagebird Client ID",
+      "regex": "[\\w.-]{0,50}?(?:message[_-]?bird)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "messagebird",
+        "message-bird",
+        "message_bird"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "microsoft-teams-webhook",
+      "name": "Microsoft Teams Webhook",
+      "regex": "https://[a-z0-9]+\\.webhook\\.office\\.com/webhookb2/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}@[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}/IncomingWebhook/[a-z0-9]{32}/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "webhook.office.com",
+        "webhookb2",
+        "incomingwebhook"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "netlify-access-token",
+      "name": "Netlify Access Token",
+      "regex": "[\\w.-]{0,50}?(?:netlify)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{40,46})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "netlify"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "new-relic-browser-api-token",
+      "name": "New Relic Browser API Token",
+      "regex": "[\\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(NRJS-[a-f0-9]{19})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "nrjs-"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "new-relic-insert-key",
+      "name": "New Relic Insert Key",
+      "regex": "[\\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(NRII-[a-z0-9-]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "nrii-"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "new-relic-user-api-id",
+      "name": "New Relic User API ID",
+      "regex": "[\\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "new-relic",
+        "newrelic",
+        "new_relic"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "new-relic-user-api-key",
+      "name": "New Relic User API Key",
+      "regex": "[\\w.-]{0,50}?(?:new-relic|newrelic|new_relic)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(NRAK-[a-z0-9]{27})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "nrak"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "notion-api-token",
+      "name": "Notion API Token",
+      "regex": "\\b(ntn_[0-9]{11}[A-Za-z0-9]{32}[A-Za-z0-9]{3})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "ntn_"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "npm-access-token",
+      "name": "Npm Access Token",
+      "regex": "\\b(npm_[a-z0-9]{36})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "npm_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "nuget-config-password",
+      "name": "Nuget Config Password",
+      "regex": "<add key=\\\"(?:(?:ClearText)?Password)\\\"\\s*value=\\\"(.{8,})\\\"\\s*/>",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "<add key="
+      ],
+      "entropy": 1,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "nytimes-access-token",
+      "name": "Nytimes Access Token",
+      "regex": "[\\w.-]{0,50}?(?:nytimes|new-york-times,|newyorktimes)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9=_\\-]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "nytimes",
+        "new-york-times",
+        "newyorktimes"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "octopus-deploy-api-key",
+      "name": "Octopus Deploy API Key",
+      "regex": "\\b(API-[A-Z0-9]{26})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "api-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "okta-access-token",
+      "name": "Okta Access Token",
+      "regex": "[\\w.-]{0,50}?(?:[\\w.-]{0,50}?(?:(?:[Oo]kta|OKTA))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3})(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(00[\\w=\\-]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "okta"
+      ],
+      "entropy": 4,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "openai-api-key",
+      "name": "Openai API Key",
+      "regex": "\\b(sk-(?:proj|svcacct|admin)-(?:[A-Za-z0-9_-]{74}|[A-Za-z0-9_-]{58})T3BlbkFJ(?:[A-Za-z0-9_-]{74}|[A-Za-z0-9_-]{58})\\b|sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "t3blbkfj"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "openshift-user-token",
+      "name": "Openshift User Token",
+      "regex": "\\b(sha256~[\\w-]{43})(?:[^\\w-]|\\z)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sha256~"
+      ],
+      "entropy": 3.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "perplexity-api-key",
+      "name": "Perplexity API Key",
+      "regex": "\\b(pplx-[a-zA-Z0-9]{48})(?:[\\x60'\"\\s;]|\\\\[nr]|$|\\b)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "pplx-"
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "plaid-api-token",
+      "name": "Plaid API Token",
+      "regex": "[\\w.-]{0,50}?(?:plaid)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(access-(?:sandbox|development|production)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "plaid"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "plaid-client-id",
+      "name": "Plaid Client ID",
+      "regex": "[\\w.-]{0,50}?(?:plaid)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{24})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "plaid"
+      ],
+      "entropy": 3.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "plaid-secret-key",
+      "name": "Plaid Secret Key",
+      "regex": "[\\w.-]{0,50}?(?:plaid)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{30})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "plaid"
+      ],
+      "entropy": 3.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "planetscale-api-token",
+      "name": "Planetscale API Token",
+      "regex": "\\b(pscale_tkn_[\\w=\\.-]{32,64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "pscale_tkn_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "planetscale-oauth-token",
+      "name": "Planetscale OAuth Token",
+      "regex": "\\b(pscale_oauth_[\\w=\\.-]{32,64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "pscale_oauth_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "planetscale-password",
+      "name": "Planetscale Password",
+      "regex": "\\b(pscale_pw_[\\w=\\.-]{32,64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "pscale_pw_"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "postman-api-token",
+      "name": "Postman API Token",
+      "regex": "\\b(PMAK-[a-f0-9]{24}\\-[a-f0-9]{34})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "pmak-"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "prefect-api-token",
+      "name": "Prefect API Token",
+      "regex": "\\b(pnu_[a-zA-Z0-9]{36})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "pnu_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "private-key",
+      "name": "Private Key",
+      "regex": "-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\\s\\S-]{64,}?KEY(?: BLOCK)?-----",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "-----begin"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "privateai-api-token",
+      "name": "Privateai API Token",
+      "regex": "[\\w.-]{0,50}?(?:[\\w.-]{0,50}?(?:private[_-]?ai)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3})(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{32})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "privateai",
+        "private_ai",
+        "private-ai"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "pulumi-api-token",
+      "name": "Pulumi API Token",
+      "regex": "\\b(pul-[a-f0-9]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "pul-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "pypi-upload-token",
+      "name": "Pypi Upload Token",
+      "regex": "pypi-AgEIcHlwaS5vcmc[\\w-]{50,1000}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "pypi-ageichlwas5vcmc"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "rapidapi-access-token",
+      "name": "Rapidapi Access Token",
+      "regex": "[\\w.-]{0,50}?(?:rapidapi)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9_-]{50})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "rapidapi"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "readme-api-token",
+      "name": "Readme API Token",
+      "regex": "\\b(rdme_[a-z0-9]{70})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "rdme_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "rubygems-api-token",
+      "name": "Rubygems API Token",
+      "regex": "\\b(rubygems_[a-f0-9]{48})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "rubygems_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "scalingo-api-token",
+      "name": "Scalingo API Token",
+      "regex": "\\b(tk-us-[\\w-]{48})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "tk-us-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sendbird-access-id",
+      "name": "Sendbird Access ID",
+      "regex": "[\\w.-]{0,50}?(?:sendbird)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sendbird"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sendbird-access-token",
+      "name": "Sendbird Access Token",
+      "regex": "[\\w.-]{0,50}?(?:sendbird)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sendbird"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sendgrid-api-token",
+      "name": "Sendgrid API Token",
+      "regex": "\\b(SG\\.[a-z0-9=_\\-\\.]{66})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sg."
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sendinblue-api-token",
+      "name": "Sendinblue API Token",
+      "regex": "\\b(xkeysib-[a-f0-9]{64}\\-[a-z0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "xkeysib-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sentry-access-token",
+      "name": "Sentry Access Token",
+      "regex": "[\\w.-]{0,50}?(?:sentry)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sentry"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sentry-org-token",
+      "name": "Sentry Org Token",
+      "regex": "\\bsntrys_eyJpYXQiO[a-zA-Z0-9+/]{10,200}(?:LCJyZWdpb25fdXJs|InJlZ2lvbl91cmwi|cmVnaW9uX3VybCI6)[a-zA-Z0-9+/]{10,200}={0,2}_[a-zA-Z0-9+/]{43}(?:[^a-zA-Z0-9+/]|\\z)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sntrys_eyjpyxqio"
+      ],
+      "entropy": 4.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sentry-user-token",
+      "name": "Sentry User Token",
+      "regex": "\\b(sntryu_[a-f0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sntryu_"
+      ],
+      "entropy": 3.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "settlemint-application-access-token",
+      "name": "Settlemint Application Access Token",
+      "regex": "\\b(sm_aat_[a-zA-Z0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sm_aat"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "settlemint-personal-access-token",
+      "name": "Settlemint Personal Access Token",
+      "regex": "\\b(sm_pat_[a-zA-Z0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sm_pat"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "settlemint-service-access-token",
+      "name": "Settlemint Service Access Token",
+      "regex": "\\b(sm_sat_[a-zA-Z0-9]{16})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sm_sat"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "shippo-api-token",
+      "name": "Shippo API Token",
+      "regex": "\\b(shippo_(?:live|test)_[a-fA-F0-9]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "shippo_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "shopify-access-token",
+      "name": "Shopify Access Token",
+      "regex": "shpat_[a-fA-F0-9]{32}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "shpat_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "shopify-custom-access-token",
+      "name": "Shopify Custom Access Token",
+      "regex": "shpca_[a-fA-F0-9]{32}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "shpca_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "shopify-private-app-access-token",
+      "name": "Shopify Private App Access Token",
+      "regex": "shppa_[a-fA-F0-9]{32}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "shppa_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "shopify-shared-secret",
+      "name": "Shopify Shared Secret",
+      "regex": "shpss_[a-fA-F0-9]{32}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "shpss_"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sidekiq-secret",
+      "name": "Sidekiq Secret",
+      "regex": "[\\w.-]{0,50}?(?:BUNDLE_ENTERPRISE__CONTRIBSYS__COM|BUNDLE_GEMS__CONTRIBSYS__COM)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-f0-9]{8}:[a-f0-9]{8})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "bundle_enterprise__contribsys__com",
+        "bundle_gems__contribsys__com"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sidekiq-sensitive-url",
+      "name": "Sidekiq Sensitive URL",
+      "regex": "\\bhttps?://([a-f0-9]{8}:[a-f0-9]{8})@(?:gems.contribsys.com|enterprise.contribsys.com)(?:[\\/|\\#|\\?|:]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "gems.contribsys.com",
+        "enterprise.contribsys.com"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-app-token",
+      "name": "Slack App Token",
+      "regex": "xapp-\\d-[A-Z0-9]+-\\d+-[a-z0-9]+",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "xapp"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-bot-token",
+      "name": "Slack Bot Token",
+      "regex": "xoxb-[0-9]{10,13}-[0-9]{10,13}[a-zA-Z0-9-]*",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "xoxb"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-config-access-token",
+      "name": "Slack Config Access Token",
+      "regex": "xoxe.xox[bp]-\\d-[A-Z0-9]{163,166}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "xoxe.xoxb-",
+        "xoxe.xoxp-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-config-refresh-token",
+      "name": "Slack Config Refresh Token",
+      "regex": "xoxe-\\d-[A-Z0-9]{146}",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "xoxe-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-legacy-bot-token",
+      "name": "Slack Legacy Bot Token",
+      "regex": "xoxb-[0-9]{8,14}-[a-zA-Z0-9]{18,26}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "xoxb"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-legacy-token",
+      "name": "Slack Legacy Token",
+      "regex": "xox[os]-\\d+-\\d+-\\d+-[a-fA-F\\d]+",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "xoxo",
+        "xoxs"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-legacy-workspace-token",
+      "name": "Slack Legacy Workspace Token",
+      "regex": "xox[ar]-(?:\\d-)?[0-9a-zA-Z]{8,48}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "xoxa",
+        "xoxr"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-user-token",
+      "name": "Slack User Token",
+      "regex": "xox[pe](?:-[0-9]{10,13}){3}-[a-zA-Z0-9-]{28,34}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "xoxp-",
+        "xoxe-"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "slack-webhook-url",
+      "name": "Slack Webhook URL",
+      "regex": "(?:https?://)?hooks.slack.com/(?:services|workflows|triggers)/[A-Za-z0-9+/]{43,56}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "hooks.slack.com"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "snyk-api-token",
+      "name": "Snyk API Token",
+      "regex": "[\\w.-]{0,50}?(?:snyk[_.-]?(?:(?:api|oauth)[_.-]?)?(?:key|token))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "snyk"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sonar-api-token",
+      "name": "Sonar API Token",
+      "regex": "[\\w.-]{0,50}?(?:sonar[_.-]?(login|token))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}((?:squ_|sqp_|sqa_)?[a-z0-9=_\\-]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 2,
+      "keywords": [
+        "sonar"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sourcegraph-access-token",
+      "name": "Sourcegraph Access Token",
+      "regex": "\\b(\\b(sgp_(?:[a-fA-F0-9]{16}|local)_[a-fA-F0-9]{40}|sgp_[a-fA-F0-9]{40}|[a-fA-F0-9]{40})\\b)(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sgp_",
+        "sourcegraph"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "square-access-token",
+      "name": "Square Access Token",
+      "regex": "\\b((?:EAAA|sq0atp-)[\\w-]{22,60})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sq0atp-",
+        "eaaa"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "squarespace-access-token",
+      "name": "Squarespace Access Token",
+      "regex": "[\\w.-]{0,50}?(?:squarespace)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "squarespace"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "stripe-access-token",
+      "name": "Stripe Access Token",
+      "regex": "\\b((?:sk|rk)_(?:test|live|prod)_[a-zA-Z0-9]{10,99})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sk_test",
+        "sk_live",
+        "sk_prod",
+        "rk_test",
+        "rk_live",
+        "rk_prod"
+      ],
+      "entropy": 2,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "sumologic-access-id",
+      "name": "Sumologic Access ID",
+      "regex": "[\\w.-]{0,50}?(?:[\\w.-]{0,50}?(?:(?:[Ss]umo|SUMO))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3})(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(su[a-zA-Z0-9]{12})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sumo"
+      ],
+      "entropy": 3,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "sumologic-access-token",
+      "name": "Sumologic Access Token",
+      "regex": "[\\w.-]{0,50}?(?:(?:[Ss]umo|SUMO))(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{64})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "sumo"
+      ],
+      "entropy": 3,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "telegram-bot-api-token",
+      "name": "Telegram Bot API Token",
+      "regex": "[\\w.-]{0,50}?(?:telegr)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9]{5,16}:(?:A)[a-z0-9_\\-]{34})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "telegr"
+      ],
+      "entropy": null,
+      "approx": true,
+      "tier": "approx",
+      "defaultOn": false
+    },
+    {
+      "id": "travisci-access-token",
+      "name": "Travisci Access Token",
+      "regex": "[\\w.-]{0,50}?(?:travis)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{22})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "travis"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twilio-api-key",
+      "name": "Twilio API Key",
+      "regex": "SK[0-9a-fA-F]{32}",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "sk"
+      ],
+      "entropy": 3,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twitch-api-token",
+      "name": "Twitch API Token",
+      "regex": "[\\w.-]{0,50}?(?:twitch)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{30})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "twitch"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twitter-access-secret",
+      "name": "Twitter Access Secret",
+      "regex": "[\\w.-]{0,50}?(?:twitter)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{45})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "twitter"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twitter-access-token",
+      "name": "Twitter Access Token",
+      "regex": "[\\w.-]{0,50}?(?:twitter)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([0-9]{15,25}-[a-zA-Z0-9]{20,40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "twitter"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twitter-api-key",
+      "name": "Twitter API Key",
+      "regex": "[\\w.-]{0,50}?(?:twitter)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{25})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "twitter"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twitter-api-secret",
+      "name": "Twitter API Secret",
+      "regex": "[\\w.-]{0,50}?(?:twitter)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{50})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "twitter"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "twitter-bearer-token",
+      "name": "Twitter Bearer Token",
+      "regex": "[\\w.-]{0,50}?(?:twitter)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(A{22}[a-zA-Z0-9%]{80,100})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "twitter"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "typeform-api-token",
+      "name": "Typeform API Token",
+      "regex": "[\\w.-]{0,50}?(?:typeform)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(tfp_[a-z0-9\\-_\\.=]{59})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "tfp_"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "vault-batch-token",
+      "name": "Vault Batch Token",
+      "regex": "\\b(hvb\\.[\\w-]{138,300})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gd",
+      "group": 0,
+      "keywords": [
+        "hvb."
+      ],
+      "entropy": 4,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "vault-service-token",
+      "name": "Vault Service Token",
+      "regex": "\\b((?:hvs\\.[\\w-]{90,120}|s\\.(?:[a-z0-9]{24})))(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "hvs.",
+        "s."
+      ],
+      "entropy": 3.5,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "yandex-access-token",
+      "name": "Yandex Access Token",
+      "regex": "[\\w.-]{0,50}?(?:yandex)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(t1\\.[A-Z0-9a-z_-]+[=]{0,2}\\.[A-Z0-9a-z_-]{86}[=]{0,2})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "yandex"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "yandex-api-key",
+      "name": "Yandex API Key",
+      "regex": "[\\w.-]{0,50}?(?:yandex)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(AQVN[A-Za-z0-9_\\-]{35,38})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "yandex"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "yandex-aws-access-token",
+      "name": "Yandex AWS Access Token",
+      "regex": "[\\w.-]{0,50}?(?:yandex)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}(YC[a-zA-Z0-9_\\-]{38})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "yandex"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    },
+    {
+      "id": "zendesk-secret-key",
+      "name": "Zendesk Secret Key",
+      "regex": "[\\w.-]{0,50}?(?:zendesk)(?:[ \\t\\w.-]{0,20})[\\s'\"]{0,3}(?:=|>|:{1,3}=|\\|\\||:|=>|\\?=|,)[\\x60'\"\\s=]{0,5}([a-z0-9]{40})(?:[\\x60'\"\\s;]|\\\\[nr]|$)",
+      "flags": "gdi",
+      "group": 0,
+      "keywords": [
+        "zendesk"
+      ],
+      "entropy": null,
+      "approx": false,
+      "tier": "core",
+      "defaultOn": true
+    }
+  ]
+}

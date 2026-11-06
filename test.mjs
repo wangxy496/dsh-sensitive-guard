@@ -5,7 +5,7 @@
  *   node test.mjs
  */
 import { execFileSync } from 'node:child_process';
-import { createHash, createHmac } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -52,7 +52,7 @@ mod.apply(ctx);
 console.log('host registration');
 check('inject is [tools]', JSON.stringify(mod.inject) === '["tools"]');
 check('two tools registered', tools.size === 2, [...tools.keys()].join(','));
-check('three routes registered', routes.size === 3, [...routes.keys()].join(','));
+check('five routes registered', routes.size === 5, [...routes.keys()].join(','));
 check('three hooks registered', listeners.size === 3, [...listeners.keys()].join(','));
 
 const pre = listeners.get('agent/pre-step')[0];
@@ -170,6 +170,69 @@ const lanToggle = fakeRes();
 await settings.handler({ method: 'POST', socket: { remoteAddress: '203.0.113.9' }, headers: { host: 'localhost:3080' } }, lanToggle);
 check('settings route is loopback-only', lanToggle.status === 403);
 
+console.log('persistent disable switch');
+const pausePath = path.join(TEMP_HOME, 'sensitive-guard', 'pause.json');
+const disabledState = (await postSettings({ action: 'disable' })).body;
+check('关闭保护返回 off 且没有到期时间',
+  disabledState.off === true && disabledState.paused === true && disabledState.remainingMs === null,
+  JSON.stringify(disabledState));
+
+const duringDisable = (await pre(
+  { messages: [{ content: `key ${SECRET}` }] },
+  async () => ({ kind: 'enter', messages: [{ content: `key ${SECRET}` }] }),
+)).messages[0].content;
+check('关闭期间明文原样进入上下文', duringDisable === `key ${SECRET}`, duringDisable);
+check('关闭状态写进 pause.json', JSON.parse(fs.readFileSync(pausePath, 'utf8')).off === true);
+
+const whileOff = (await postSettings({ action: 'resume' })).body;
+check('resume 不会误解除持久关闭', whileOff.off === true && whileOff.paused === true, JSON.stringify(whileOff));
+const pauseWhileOff = (await postSettings({ action: 'pause', minutes: 30 })).body;
+check('限时暂停不会覆盖持久关闭', pauseWhileOff.off === true, JSON.stringify(pauseWhileOff));
+
+// A fresh process re-reads pause.json from disk: this is the actual restart
+// behaviour, not a simulation of the in-memory flag.
+const restartProbe = [
+  "import { Readable } from 'node:stream';",
+  "const mod = await import(process.argv[1]);",
+  "const listeners = new Map(); const routes = new Map();",
+  "const ctx = { on(n,f){ if(!listeners.has(n)) listeners.set(n,[]); listeners.get(n).push(f); },",
+  "  effect(fn){ try{fn()}catch{} return ()=>{}; }, tools:{register:()=>()=>{}},",
+  "  webServer:{register(r){ routes.set(r.path,r); return ()=>{}; }}, inject(_d,cb){cb(ctx);} };",
+  "mod.apply(ctx);",
+  "const pre = listeners.get('agent/pre-step')[0];",
+  "const raw = 'key ' + process.argv[2];",
+  "const d = await pre({messages:[{content:raw}]}, async()=>({kind:'enter',messages:[{content:raw}]}));",
+  "const text = d.messages.length ? d.messages[0].content : raw;",
+  "const res={status:0,body:'',writeHead(c){this.status=c;},end(b){this.body=String(b||'');}};",
+  "await routes.get('/guard/settings').handler({method:'GET',socket:{remoteAddress:'127.0.0.1'},headers:{host:'localhost:3080'}}, res);",
+  "process.stdout.write(JSON.stringify({ masked: text.includes('<SG_'), state: JSON.parse(res.body||'{}') }));",
+].join('\n');
+const restarted = JSON.parse(execFileSync(process.execPath, [
+  '--input-type=module', '-e', restartProbe,
+  pathToFileURL(path.join(ROOT, 'index.js')).href, SECRET,
+], { env: { ...process.env, DSH_HOME: TEMP_HOME }, encoding: 'utf8' }));
+check('重启后 off 仍然生效', restarted.state.off === true && restarted.state.paused === true,
+  JSON.stringify(restarted.state));
+check('重启后仍然不遮挡', restarted.masked === false, JSON.stringify(restarted));
+
+const enabled = (await postSettings({ action: 'enable' })).body;
+check('开启保护清除 off', enabled.off === false && enabled.paused === false, JSON.stringify(enabled));
+const afterEnable = (await pre(
+  { messages: [{ content: `key ${SECRET}` }] },
+  async () => ({ kind: 'enter', messages: [{ content: `key ${SECRET}` }] }),
+)).messages[0].content;
+check('重新开启后恢复遮挡', afterEnable.includes('<SG_'), afterEnable);
+const savedOn = JSON.parse(fs.readFileSync(pausePath, 'utf8'));
+check('恢复后写盘清除 off', savedOn.off === false && savedOn.until === 0, JSON.stringify(savedOn));
+
+const lanDisable = fakeRes();
+await settings.handler(Object.assign(Readable.from([Buffer.from(JSON.stringify({ action: 'disable' }))]), {
+  method: 'POST', socket: { remoteAddress: '203.0.113.9' }, headers: { host: 'localhost:3080' },
+}), lanDisable);
+check('非本机来源不能关闭保护', lanDisable.status === 403, String(lanDisable.status));
+check('未知 action 返回 400', (await postSettings({ action: 'status-probe' })).status === 400);
+check('被拒绝后仍然是开启状态', JSON.parse(fs.readFileSync(pausePath, 'utf8')).off === false);
+
 /* -------------------------------------------------------------- client -- */
 
 console.log('client');
@@ -215,6 +278,78 @@ const fullCtx = new Proxy({
 });
 api.apply(fullCtx);
 check('inline renderer uses keyed registration', registered.some((r) => r.key === 'sensitive-guard'));
+
+/**
+ * Render both tabs through a React stub that actually calls function
+ * components. Catches runtime errors in the new settings UI (undefined.map,
+ * bad hook order, missing dictionary keys) that `api.apply` alone cannot.
+ */
+const fakeVault = {
+  entries: [{
+    ph: '<SG_aaaaaaaaaaaa>', name: '测试口令', preview: 'dsh-desk…',
+    label: '公司内部凭据', rule: 'manual', createdAt: '2026-11-06T09:00:00.000Z',
+    hits: 1, pinned: true,
+  }],
+  access: { level: 'loopback' }, stats: {}, rules: {},
+};
+function renderSettingsTab(forcedTab, opts = {}) {
+  let stateIndex = 0;
+  const ReactStub = {
+    createElement: (type, props, ...children) => (
+      typeof type === 'function' ? type({ ...(props || {}), children }) : { type, props, children }
+    ),
+    Fragment: 'Fragment',
+    useState: (initial) => {
+      stateIndex += 1;
+      let value = forcedTab === 'rules' && stateIndex === 6 ? 'rules' : initial;
+      if (opts.forceRows && stateIndex === 1) value = fakeVault;
+      if (opts.forceForm && value === false) value = true;
+      if (opts.forceCustom && value === '密码') value = '__custom__';
+      return [value, () => {}];
+    },
+    useEffect: () => {},
+    useRef: () => ({ current: 0 }),
+    useCallback: (fn) => fn,
+  };
+  let localApi = null;
+  const win = { __ModuleLoader__: { load(def) { localApi = def.factory((n) => (n === 'react' ? ReactStub : {})); } } };
+  const captured = [];
+  const localSlots = {
+    inject(_name, factory) {
+      const it = factory();
+      if (it && typeof it.next === 'function') { let s = it.next(); while (!s.done) s = it.next(); }
+    },
+    register(options, renderer) { captured.push({ options, renderer }); return () => {}; },
+  };
+  const stubCtx = new Proxy({
+    slots: localSlots,
+    effect: () => () => {},
+    locale: { register: () => () => {}, bind: () => (k) => k },
+    get: (name) => (name === 'uiConversation' ? { userText: { register: () => {} } } : undefined),
+    inject: (_deps, cb) => cb({ uiConversation: { userText: { register: () => {} } } }),
+  }, { get(t, p) { return p in t ? t[p] : undefined; } });
+  new Function('window', 'globalThis', clientSrc).call(globalThis, win, globalThis);
+  localApi.apply(stubCtx);
+  const section = captured.find((c) => c.options && c.options.name === 'settings.section');
+  if (!section) throw new Error('settings renderer missing');
+  return section.renderer();
+}
+const renderCases = [
+  ['entries 标签', 'entries', {}],
+  ['rules 标签', 'rules', {}],
+  ['添加敏感数据弹窗', 'entries', { forceForm: true }],
+  ['自定义分类弹窗', 'entries', { forceForm: true, forceCustom: true }],
+  ['列表行与复制按钮', 'entries', { forceRows: true }],
+];
+for (const [name, tabName, opts] of renderCases) {
+  let thrown = null;
+  try { renderSettingsTab(tabName, opts); } catch (error) { thrown = error; }
+  check(`设置页 ${name} 渲染不抛错`, thrown === null, thrown && thrown.message);
+}
+// forceForm also flips confirmDisable to true, so the modal is covered above.
+check('设置页含关闭保护入口与确认弹窗',
+  ["action: 'disable'", "action: 'enable'", 'statusDisabled', 'disableTitle', 'function DisableConfirm']
+    .every((key) => clientSrc.includes(key)));
 
 /* ------------------------------------------------------------ behaviour -- */
 
@@ -528,6 +663,91 @@ if (legacyEntry) {
 } else {
   check('找到用于升级测试的 vault 条目', false, `missing ${legacySecret} in ${vaultRaw.entries.map((e) => e.hash).join(',')}`);
 }
+
+/* --------------------------------------------------- gitleaks catalog -- */
+
+console.log('gitleaks catalog');
+const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'rules', 'gitleaks.json'), 'utf8'));
+check('目录统计 222 / 221 / 1 跳过',
+  catalog.total === 222 && catalog.compiled === 221 && catalog.skipped.length === 1,
+  JSON.stringify({ total: catalog.total, compiled: catalog.compiled, skipped: catalog.skipped.length }));
+check('跳过的是 pkcs12-file', Boolean(catalog.skipped[0]) && catalog.skipped[0].id === 'pkcs12-file');
+let compileFailures = 0;
+for (const rule of catalog.rules) {
+  try { new RegExp(rule.regex, rule.flags); } catch { compileFailures += 1; }
+}
+check('221 条正则全部能编译', compileFailures === 0, String(compileFailures));
+const tiers = { core: 0, approx: 0, loose: 0 };
+for (const rule of catalog.rules) tiers[rule.tier] += 1;
+check('分级合计 221', tiers.core + tiers.approx + tiers.loose === 221, JSON.stringify(tiers));
+check('approx 10 条、loose 至少 1 条', tiers.approx === 10 && tiers.loose >= 1, JSON.stringify(tiers));
+check('只有 core 默认开', catalog.rules.every((r) => r.defaultOn === (r.tier === 'core')));
+check('221 条都带 keywords 预筛', catalog.rules.every((r) => Array.isArray(r.keywords) && r.keywords.length > 0));
+check('NOTICE 含 MIT 版权声明', fs.readFileSync(path.join(ROOT, 'NOTICE'), 'utf8').includes('Copyright (c) 2019 Zachary Rice'));
+
+async function callRoute(routePath, method, payload, remote = '127.0.0.1') {
+  const res = fakeRes();
+  const req = payload === undefined
+    ? { method, socket: { remoteAddress: remote }, headers: { host: 'localhost:3080' } }
+    : Object.assign(Readable.from([Buffer.from(JSON.stringify(payload))]), {
+      method, socket: { remoteAddress: remote },
+      headers: { host: 'localhost:3080', 'content-type': 'application/json' },
+    });
+  await routes.get(routePath).handler(req, res);
+  return { status: res.status, body: JSON.parse(res.body || '{}') };
+}
+
+const rulesGet = await callRoute('/guard/rules', 'GET');
+check('规则页返回 221 条 + 1 条跳过',
+  rulesGet.status === 200 && rulesGet.body.compiled === 221 && rulesGet.body.skipped.length === 1,
+  JSON.stringify(rulesGet.body).slice(0, 130));
+check('规则页含内置规则', rulesGet.body.rules.some((r) => r.source === 'builtin'));
+check('规则页含 1Password Secret Key', rulesGet.body.rules.some((r) => r.name === '1Password Secret Key'));
+const approxRule = rulesGet.body.rules.find((r) => r.tier === 'approx');
+check('approx 规则默认关', Boolean(approxRule) && approxRule.enabled === false, approxRule && approxRule.id);
+check('规则页分页大小 20', rulesGet.body.pageSize === 20);
+
+const ageKey = 'AGE-SECRET-KEY-1' + 'Q'.repeat(58);
+const ageBefore = await runPre(`key ${ageKey}`);
+check('core 规则默认开且命中', ageBefore.includes('<SG_'), JSON.stringify(ageBefore.slice(0, 90)));
+const lowEntropyKey = 'A3-AAAAAA-AAAAAAAAAAA-AAAAA-AAAAA-AAAAA';
+const lowOut = await runPre(`key ${lowEntropyKey}`);
+check('逐条 entropy 阈值挡住低熵命中', !lowOut.includes('<SG_'), JSON.stringify(lowOut.slice(0, 90)));
+
+const id = 'gitleaks:age-secret-key';
+const toggleOff = await callRoute('/guard/rules', 'POST', { id, enabled: false });
+check('关闭 core 规则成功', toggleOff.status === 200 && toggleOff.body.rules.find((r) => r.id === id).enabled === false);
+check('关闭后不再遮挡', !(await runPre(`key ${ageKey}`)).includes('<SG_'));
+const toggleOn = await callRoute('/guard/rules', 'POST', { id, enabled: true });
+check('重新打开成功', toggleOn.status === 200 && toggleOn.body.rules.find((r) => r.id === id).enabled === true);
+const badToggle = await callRoute('/guard/rules', 'POST', { id: 'does-not-exist', enabled: true });
+check('未知规则 id 被拒', badToggle.status === 400 && badToggle.body.error === 'unknown-rule');
+const lanRuleToggle = await callRoute('/guard/rules', 'POST', { id, enabled: false }, '203.0.113.99');
+check('非本机来源不能改规则', lanRuleToggle.status === 403, JSON.stringify(lanRuleToggle));
+await callRoute('/guard/rules', 'POST', { id, enabled: true });
+
+console.log('manual entries');
+const manual = 'MANUAL-INTERNAL-778899';
+const addedEntry = await callRoute('/guard/entries', 'POST', { action: 'add', name: '测试口令', plaintext: manual, kind: '密码' });
+check('添加敏感数据返回占位符',
+  addedEntry.status === 200 && /^<SG_[0-9a-f]{12}>$/.test(addedEntry.body.placeholder || ''),
+  JSON.stringify(addedEntry));
+const manualHit = await runPre(`value ${manual} end`);
+check('手动录入的明文被遮', manualHit.includes('<SG_'), JSON.stringify(manualHit));
+const rulesOnDisk = fs.readFileSync(path.join(TEMP_HOME, 'sensitive-guard', 'rules.json'), 'utf8');
+check('明文不写进 rules.json', !rulesOnDisk.includes(manual));
+const manualVault = await callRoute('/guard/vault', 'GET');
+check('保管库条目带名称与 pinned',
+  manualVault.body.entries.some((e) => e.name === '测试口令' && e.pinned === true),
+  JSON.stringify(manualVault.body.entries.slice(0, 1)));
+const manualReveal = await callRoute('/guard/reveal', 'POST', { placeholder: addedEntry.body.placeholder });
+check('手动条目可解锁取回明文', manualReveal.status === 200 && manualReveal.body.plaintext === manual,
+  JSON.stringify(manualReveal.body).slice(0, 100));
+const tooShort = await callRoute('/guard/entries', 'POST', { action: 'add', name: 'x', plaintext: 'ab' });
+check('过短的明文被拒', tooShort.status === 400 && tooShort.body.error === 'bad-plaintext');
+const deleted = await callRoute('/guard/entries', 'POST', { action: 'delete', placeholder: addedEntry.body.placeholder });
+check('删除手动条目成功', deleted.status === 200);
+check('删除后不再遮挡', !(await runPre(`value ${manual} end`)).includes('<SG_'));
 
 /* --------------------------------------------------------------------- */
 

@@ -34,7 +34,11 @@ import path from 'node:path';
 const VAULT_ROUTE = '/guard/vault';
 const REVEAL_ROUTE = '/guard/reveal';
 const SETTINGS_ROUTE = '/guard/settings';
-const PLUGIN_VERSION = '0.4.0';
+const RULES_ROUTE = '/guard/rules';
+const ENTRIES_ROUTE = '/guard/entries';
+const PLUGIN_VERSION = '0.5.0';
+const CATALOG_FILE = new URL('./rules/gitleaks.json', import.meta.url);
+const PAGE_SIZE = 20;
 
 /** Stable placeholder form: <SG_ + 12 hex chars of HMAC(vault.key, plaintext) + >. */
 const PH_EXACT = /^<SG_[0-9a-f]{12}>$/;
@@ -100,11 +104,13 @@ const audit = [];
 let lastError = null;
 
 /**
- * Protection can be paused from Settings. Two shapes:
+ * Protection state, persisted in pause.json except `untilRestart`.
  *   - `until` a timestamp (auto-resumes, survives a restart)
  *   - `untilRestart` (deliberately not persisted — a restart re-arms the guard)
+ *   - `off` a deliberate, persistent disable: survives restarts and never
+ *     auto-resumes. Only an explicit `enable` action re-arms protection.
  */
-const pause = { until: 0, untilRestart: false };
+const pause = { until: 0, untilRestart: false, off: false };
 
 function pauseFile() { return path.join(dataDir(), 'pause.json'); }
 
@@ -113,20 +119,23 @@ function loadPause() {
     const raw = JSON.parse(fs.readFileSync(pauseFile(), 'utf8'));
     // `untilRestart` is deliberately not restored: a restart re-arms the guard.
     if (raw && Number.isFinite(raw.until) && raw.until > Date.now()) pause.until = raw.until;
+    // `off` IS restored — that is the whole point of the disable switch.
+    if (raw && raw.off === true) pause.off = true;
   } catch { /* no pause file yet */ }
 }
 
 function persistPause() {
   try {
     fs.mkdirSync(dataDir(), { recursive: true });
-    fs.writeFileSync(pauseFile(), JSON.stringify({ until: pause.until }), { mode: 0o600 });
+    fs.writeFileSync(pauseFile(), JSON.stringify({ until: pause.until, off: pause.off }), { mode: 0o600 });
   } catch (error) {
     lastError = `pause persist: ${String((error && error.message) || error)}`;
   }
 }
 
-/** @returns remaining ms while paused, 0 when protection is active. */
+/** @returns remaining ms while protection is inactive, 0 when active. */
 function pausedMs() {
+  if (pause.off) return Number.POSITIVE_INFINITY;
   if (pause.untilRestart) return Number.POSITIVE_INFINITY;
   return Math.max(0, pause.until - Date.now());
 }
@@ -262,6 +271,7 @@ function persistVault(immediate) {
 function trimVault() {
   if (vault.entries.size <= MAX_VAULT_ENTRIES) return;
   const ordered = [...vault.entries.values()]
+    .filter((entry) => !entry.pinned)
     .sort((a, b) => String(a.lastHitAt || a.createdAt).localeCompare(String(b.lastHitAt || b.createdAt)));
   for (let i = 0; i < ordered.length && vault.entries.size > MAX_VAULT_ENTRIES; i += 1) {
     const victim = ordered[i];
@@ -328,6 +338,8 @@ function entryView(entry) {
   return {
     ph: entry.ph,
     aliases: Array.isArray(entry.aliases) ? entry.aliases.slice() : [],
+    name: String(entry.name || ''),
+    pinned: Boolean(entry.pinned),
     preview: entry.preview,
     rule: entry.rule,
     label: entry.label || entry.rule,
@@ -352,6 +364,56 @@ function entryViewForModel(entry) {
     lastHitAt: entry.lastHitAt,
     hits: entry.hits || 1,
   };
+}
+
+/**
+ * Values added by hand in Settings are pinned vault entries. Their plaintext is
+ * decrypted into memory once (never written to rules.json) so the scanner can
+ * match them literally.
+ */
+let manualSecrets = null;
+function manualValues() {
+  if (manualSecrets) return manualSecrets;
+  loadVault();
+  manualSecrets = [];
+  for (const entry of vault.entries.values()) {
+    if (!entry.pinned) continue;
+    try {
+      const value = decrypt(entry.enc);
+      if (value) manualSecrets.push(value);
+    } catch { /* unreadable entry: keep it out of the matcher */ }
+  }
+  return manualSecrets;
+}
+
+function addManualEntry(name, plaintext, kind) {
+  const ph = remember(plaintext, 'manual', 'user', kind || name || '手动录入');
+  const entry = vault.entries.get(hashOf(plaintext));
+  if (entry) {
+    entry.pinned = true;
+    entry.name = String(name || '');
+    persistVault(true);
+  }
+  const list = manualValues();
+  if (!list.includes(plaintext)) list.push(plaintext);
+  noteAudit('manual-add', { ph });
+  return ph;
+}
+
+function removeManualEntry(ph) {
+  loadVault();
+  const hash = vault.byPh.get(ph);
+  const entry = hash && vault.entries.get(hash);
+  if (!entry) return false;
+  let plaintext = '';
+  try { plaintext = decrypt(entry.enc); } catch { /* still remove the row */ }
+  vault.entries.delete(hash);
+  vault.byPh.delete(ph);
+  for (const alias of Array.isArray(entry.aliases) ? entry.aliases : []) vault.byPh.delete(alias);
+  if (manualSecrets && plaintext) manualSecrets = manualSecrets.filter((v) => v !== plaintext);
+  persistVault(true);
+  noteAudit('manual-remove', { ph });
+  return true;
 }
 
 /* ---------------------------------------------------------------- rules -- */
@@ -468,7 +530,8 @@ try {
   console.warn('[sensitive-guard] rule precompile failed:', error && error.message);
 }
 
-let fileRules = { list: [], outboundScrub: true, entropy: false, entropyThreshold: 4.5, allowCidrs: [], error: null, mtime: 0, checkedAt: 0 };
+let fileRules = { list: [], outboundScrub: true, entropy: false, entropyThreshold: 4.5, allowCidrs: [], enabledRules: [], error: null, mtime: 0, checkedAt: 0 };
+let allRulesCache = null;
 
 function reloadRules(force) {
   const now = Date.now();
@@ -496,6 +559,9 @@ function reloadRules(force) {
     fileRules.entropy = raw && raw.entropy === true;
     fileRules.entropyThreshold = raw && Number.isFinite(raw.entropyThreshold) ? raw.entropyThreshold : 4.5;
     fileRules.disabled = new Set(Array.isArray(raw && raw.disabled) ? raw.disabled.map(String) : []);
+    // Rules graded `approx` / `loose` ship off by default; this list turns
+    // individual ones on without having to hand-edit the file.
+    fileRules.enabledRules = new Set(Array.isArray(raw && raw.enabledRules) ? raw.enabledRules.map(String) : []);
     // Opt-in LAN exposure for the reveal routes. Empty (the default) keeps them
     // loopback-only. Entries are CIDRs, e.g. ["192.168.0.0/16"].
     const wanted = Array.isArray(raw && raw.allowCidrs) ? raw.allowCidrs.map((item) => String(item).trim()) : [];
@@ -503,6 +569,7 @@ function reloadRules(force) {
     const rejected = wanted.filter((item) => parseCidr(item) === null);
     fileRules.allowCidrs = accepted;
     fileRules.error = null;
+    allRulesCache = null;
     if (rejected.length > 0) {
       fileRules.error = `allowCidrs 忽略无效项: ${rejected.join(', ')}（需形如 192.168.0.0/16，且不接受 /0）`;
     }
@@ -515,10 +582,94 @@ function disabledSet() {
   return fileRules.disabled instanceof Set ? fileRules.disabled : new Set();
 }
 
+function enabledSet() {
+  return fileRules.enabledRules instanceof Set ? fileRules.enabledRules : new Set();
+}
+
+/**
+ * Upstream gitleaks rules ship as a pre-converted JSON file (see NOTICE and
+ * scripts/build-gitleaks.mjs). Load lazily: a missing catalog must never stop
+ * the built-in rules from working.
+ */
+let catalogCache = null;
+function loadCatalog() {
+  if (catalogCache) return catalogCache;
+  try {
+    const raw = JSON.parse(fs.readFileSync(CATALOG_FILE, 'utf8'));
+    catalogCache = {
+      meta: {
+        total: raw.total,
+        compiled: raw.compiled,
+        skipped: Array.isArray(raw.skipped) ? raw.skipped : [],
+        license: raw.license || 'MIT',
+        source: raw.source || '',
+      },
+      rules: raw.rules.map((item) => ({
+        id: `gitleaks:${item.id}`,
+        group: Number.isInteger(item.group) ? item.group : 0,
+        re: new RegExp(item.regex, item.flags),
+        keywords: (item.keywords || []).map((k) => String(k).toLowerCase()),
+        entropy: Number.isFinite(item.entropy) ? item.entropy : null,
+        approx: Boolean(item.approx),
+        tier: item.tier,
+        defaultOn: item.defaultOn !== false,
+        label: item.name,
+        name: item.name,
+        source: 'gitleaks',
+        detectors: ['关键词', '正则', ...(Number.isFinite(item.entropy) ? ['熵值'] : [])],
+      })),
+    };
+  } catch (error) {
+    lastError = `catalog: ${String((error && error.message) || error)}`;
+    catalogCache = { meta: { total: 0, compiled: 0, skipped: [], license: 'MIT', source: '' }, rules: [] };
+  }
+  return catalogCache;
+}
+
+function allRules() {
+  if (allRulesCache) return allRulesCache;
+  const builtin = BUILTIN_RULES.map((rule) => ({
+    ...rule, defaultOn: true, source: 'builtin', name: rule.id,
+    tier: 'core', approx: false, detectors: ['正则'],
+  }));
+  const custom = fileRules.list.map((rule) => ({
+    ...rule, defaultOn: true, source: 'custom', name: rule.id,
+    tier: 'core', approx: false, detectors: ['正则'],
+  }));
+  allRulesCache = [...builtin, ...loadCatalog().rules, ...custom];
+  return allRulesCache;
+}
+
+function ruleEnabled(rule) {
+  if (disabledSet().has(rule.id)) return false;
+  if (!rule.defaultOn && !enabledSet().has(rule.id)) return false;
+  return true;
+}
+
 function activeRules() {
   reloadRules(false);
-  const disabled = disabledSet();
-  return [...BUILTIN_RULES, ...fileRules.list].filter((rule) => !disabled.has(rule.id));
+  return allRules().filter(ruleEnabled);
+}
+
+/** Merge a small edit into rules.json without clobbering hand-written config. */
+function writeRulesPatch(mutate) {
+  try {
+    fs.mkdirSync(dataDir(), { recursive: true });
+    let raw = {};
+    try {
+      const parsed = JSON.parse(fs.readFileSync(rulesFile(), 'utf8'));
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) raw = parsed;
+    } catch { /* missing or broken file: start from a clean object */ }
+    mutate(raw);
+    const tmp = `${rulesFile()}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify(raw, null, 2)}\n`, { mode: 0o600 });
+    fs.renameSync(tmp, rulesFile());
+    hardenFilePermissions(rulesFile());
+    return true;
+  } catch (error) {
+    lastError = `rules patch: ${String((error && error.message) || error)}`;
+    return false;
+  }
 }
 
 /* -------------------------------------------------------------- scrubbing -- */
@@ -560,7 +711,15 @@ function findHits(text, origin) {
   // runs synchronously inside a hook — cap the window rather than freeze the host.
   const scan = text.length > MAX_SCAN_CHARS ? text.slice(0, MAX_SCAN_CHARS) : text;
   const hits = [];
+  let lower = null;
   for (const rule of activeRules()) {
+    // gitleaks rules carry keywords precisely so their regex is only run on
+    // text that could match it — 221 regexes per message would blow the hook
+    // budget otherwise.
+    if (rule.keywords && rule.keywords.length) {
+      if (lower === null) lower = scan.toLowerCase();
+      if (!rule.keywords.some((k) => lower.includes(k))) continue;
+    }
     rule.re.lastIndex = 0;
     let match;
     while ((match = rule.re.exec(scan)) !== null) {
@@ -587,7 +746,8 @@ function findHits(text, origin) {
       }
       // The keyword group (when the rule has one) says *what* leaked — password /
       // token / key — which the rule id alone cannot express for keyword-prose.
-      const label = rule.group > 1 && typeof match[1] === 'string' ? match[1] : rule.id;
+      if (rule.entropy != null && shannon(trimmed) < rule.entropy) continue;
+      const label = rule.name || (rule.group > 1 && typeof match[1] === 'string' ? match[1] : rule.id);
       hits.push({ offset, end, value: trimmed, rule: rule.id, label });
     }
   }
@@ -599,6 +759,18 @@ function findHits(text, origin) {
   }
   if (fileRules.entropy) {
     for (const hit of entropyHits(scan)) hits.push(hit);
+  }
+  // Values the user added through "添加敏感数据" live encrypted in the vault,
+  // never in rules.json. Match them literally on every ingress/outbound path.
+  for (const secret of manualValues()) {
+    if (!secret || secret.length < 3) continue;
+    let from = 0;
+    for (;;) {
+      const at = scan.indexOf(secret, from);
+      if (at < 0) break;
+      hits.push({ offset: at, end: at + secret.length, value: secret, rule: 'manual', label: '手动录入' });
+      from = at + secret.length;
+    }
   }
   hits.sort((a, b) => a.offset - b.offset || b.end - a.end);
   const kept = [];
@@ -1144,7 +1316,7 @@ function jsonPostOk(req, level) {
 }
 
 /**
- * Single entry gate for the three routes. Returns the level so callers can
+ * Single entry gate for the five routes. Returns the level so callers can
  * branch, or null after having already sent the rejection.
  *
  * `allowRestricted` lets the vault route answer read-only metadata to an
@@ -1220,7 +1392,7 @@ function registerRoutes(ctx) {
         dataDir: snap.dataDir,
         lastError: snap.lastError,
         outboundScrub: fileRules.outboundScrub,
-        rules: { builtin: BUILTIN_RULES.length, custom: fileRules.list.length, error: fileRules.error },
+        rules: { builtin: BUILTIN_RULES.length, catalog: loadCatalog().meta.compiled, custom: fileRules.list.length, error: fileRules.error },
         // Tells the UI whether this page is being served over LAN (allowCidrs).
         access: {
           level,
@@ -1277,8 +1449,9 @@ function registerRoutes(ctx) {
         const ms = pausedMs();
         const finite = Number.isFinite(ms);
         return {
+          off: pause.off,
           paused: ms > 0,
-          untilRestart: pause.untilRestart,
+          untilRestart: !pause.off && pause.untilRestart,
           until: finite && ms > 0 ? Date.now() + ms : null,
           remainingMs: finite ? ms : null,
         };
@@ -1295,7 +1468,23 @@ function registerRoutes(ctx) {
       try { body = JSON.parse(await readBody(req, 2048) || '{}'); } catch { sendJson(res, 400, { error: 'bad-json' }); return; }
       const action = String((body && body.action) || '');
 
-      if (action === 'resume') {
+      if (action === 'disable') {
+        // Deliberate, persistent off switch. Unlike a pause this survives a
+        // restart and never auto-resumes; only `enable` re-arms protection.
+        pause.off = true;
+        pause.until = 0;
+        pause.untilRestart = false;
+        persistPause();
+        noteAudit('disable', {});
+      } else if (action === 'enable') {
+        pause.off = false;
+        pause.until = 0;
+        pause.untilRestart = false;
+        persistPause();
+        noteAudit('enable', {});
+      } else if (action === 'resume') {
+        // Resume only clears a timed pause; it never silently lifts a
+        // deliberate disable.
         pause.until = 0;
         pause.untilRestart = false;
         persistPause();
@@ -1323,6 +1512,98 @@ function registerRoutes(ctx) {
       sendJson(res, 200, shape());
     },
   }), 'sensitive-guard: settings route');
+
+  // Rule catalogue: the client does search / filter / pagination, and toggles
+  // one rule at a time (written into rules.json, never into the vault).
+  ctx.effect(() => ctx.webServer.register({
+    kind: 'exact',
+    path: RULES_ROUTE,
+    handler: async (req, res) => {
+      const level = guard(req, res, { origin: true });
+      if (level === null) return;
+      const view = () => {
+        const meta = loadCatalog().meta;
+        return {
+          ok: true,
+          total: meta.total,
+          compiled: meta.compiled,
+          pageSize: PAGE_SIZE,
+          skipped: meta.skipped,
+          license: meta.license,
+          source: meta.source,
+          rules: allRules().map((rule) => ({
+            id: rule.id,
+            name: rule.name,
+            source: rule.source,
+            tier: rule.tier,
+            defaultOn: rule.defaultOn,
+            enabled: ruleEnabled(rule),
+            approx: Boolean(rule.approx),
+            detectors: rule.detectors || ['正则'],
+            keywords: rule.keywords || [],
+            entropy: rule.entropy === undefined ? null : rule.entropy,
+          })),
+        };
+      };
+      if (req.method === 'GET' || req.method === 'HEAD') {
+        reloadRules(false);
+        sendJson(res, 200, view());
+        return;
+      }
+      if (req.method !== 'POST') { sendJson(res, 405, { error: 'method' }); return; }
+      if (!jsonPostOk(req, level)) { sendJson(res, 403, { error: 'content-type' }); return; }
+      let body;
+      try { body = JSON.parse(await readBody(req, 4096) || '{}'); } catch { sendJson(res, 400, { error: 'bad-json' }); return; }
+      const id = String((body && body.id) || '');
+      const rule = allRules().find((r) => r.id === id);
+      if (!rule) { sendJson(res, 400, { error: 'unknown-rule' }); return; }
+      const want = body && typeof body.enabled === 'boolean' ? body.enabled : !ruleEnabled(rule);
+      const wrote = writeRulesPatch((raw) => {
+        const disabled = new Set(Array.isArray(raw.disabled) ? raw.disabled.map(String) : []);
+        const enabledRules = new Set(Array.isArray(raw.enabledRules) ? raw.enabledRules.map(String) : []);
+        if (want) { disabled.delete(id); if (!rule.defaultOn) enabledRules.add(id); }
+        else { enabledRules.delete(id); if (rule.defaultOn) disabled.add(id); }
+        raw.disabled = [...disabled];
+        raw.enabledRules = [...enabledRules];
+      });
+      if (!wrote) { sendJson(res, 500, { error: 'write-failed' }); return; }
+      reloadRules(true);
+      noteAudit(want ? 'rule-on' : 'rule-off', { id });
+      sendJson(res, 200, view());
+    },
+  }), 'sensitive-guard: rules route');
+
+  // "添加敏感数据": plaintext goes straight into the encrypted vault, never
+  // into rules.json. Delete removes the vault row and the in-memory matcher.
+  ctx.effect(() => ctx.webServer.register({
+    kind: 'exact',
+    path: ENTRIES_ROUTE,
+    handler: async (req, res) => {
+      const level = guard(req, res, { origin: true });
+      if (level === null) return;
+      if (req.method !== 'POST') { sendJson(res, 405, { error: 'method' }); return; }
+      if (!jsonPostOk(req, level)) { sendJson(res, 403, { error: 'content-type' }); return; }
+      let body;
+      try { body = JSON.parse(await readBody(req, 8192) || '{}'); } catch { sendJson(res, 400, { error: 'bad-json' }); return; }
+      const action = String((body && body.action) || 'add');
+      if (action === 'delete') {
+        const ph = String((body && body.placeholder) || '').trim();
+        if (!PH_EXACT.test(ph)) { sendJson(res, 400, { error: 'bad-placeholder' }); return; }
+        if (!removeManualEntry(ph)) { sendJson(res, 404, { error: 'not-found' }); return; }
+        sendJson(res, 200, { ok: true });
+        return;
+      }
+      if (action !== 'add') { sendJson(res, 400, { error: 'unknown-action' }); return; }
+      const name = String((body && body.name) || '').trim().slice(0, 64);
+      const plaintext = typeof (body && body.plaintext) === 'string' ? body.plaintext : '';
+      const kind = String((body && body.kind) || '').trim().slice(0, 32);
+      if (plaintext.length < 3 || plaintext.length > 2000 || plaintext.includes(PH_HINT)) {
+        sendJson(res, 400, { error: 'bad-plaintext' }); return;
+      }
+      const ph = addManualEntry(name, plaintext, kind);
+      sendJson(res, 200, { ok: true, placeholder: ph, name });
+    },
+  }), 'sensitive-guard: entries route');
 }
 
 /* ----------------------------------------------------------------- apply -- */
