@@ -25,7 +25,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import { isIP } from 'node:net';
 import os from 'node:os';
@@ -34,9 +34,9 @@ import path from 'node:path';
 const VAULT_ROUTE = '/guard/vault';
 const REVEAL_ROUTE = '/guard/reveal';
 const SETTINGS_ROUTE = '/guard/settings';
-const PLUGIN_VERSION = '0.3.4';
+const PLUGIN_VERSION = '0.4.0';
 
-/** Stable placeholder form: <SG_ + 12 hex chars of sha256(plaintext) + >. */
+/** Stable placeholder form: <SG_ + 12 hex chars of HMAC(vault.key, plaintext) + >. */
 const PH_EXACT = /^<SG_[0-9a-f]{12}>$/;
 const PH_HINT = '<SG_';
 const HASH_EXACT = /^[0-9a-f]{12}$/;
@@ -199,8 +199,21 @@ function decrypt(payload) {
   return Buffer.concat([decipher.update(Buffer.from(ctB64, 'base64')), decipher.final()]).toString('utf8');
 }
 
+/** Internal vault key. Never exposed: the placeholder used to be derived from
+ * this, which made short/low-entropy secrets reversible by offline dictionary.
+ */
 function hashOf(value) {
   return createHash('sha256').update(value, 'utf8').digest('hex').slice(0, 12);
+}
+
+/**
+ * Placeholder = HMAC-SHA256(vault.key, plaintext)[:12]. Deterministic, so the
+ * same secret always gets the same code, but offline brute force no longer
+ * works without the local key — a six-digit password could previously be
+ * recovered from the code in ~100ms.
+ */
+function placeholderOf(value) {
+  return `<SG_${createHmac('sha256', loadKey()).update(value, 'utf8').digest('hex').slice(0, 12)}>`;
 }
 
 function loadVault() {
@@ -214,6 +227,11 @@ function loadVault() {
       if (typeof entry.ph !== 'string' || !PH_EXACT.test(entry.ph)) continue;
       vault.entries.set(entry.hash, entry);
       vault.byPh.set(entry.ph, entry.hash);
+      // Pre-0.4.0 codes were sha256(plaintext)[:12]. Keep every historical
+      // alias resolvable so old conversations can still unlock their chips.
+      for (const alias of Array.isArray(entry.aliases) ? entry.aliases : []) {
+        if (typeof alias === 'string' && PH_EXACT.test(alias)) vault.byPh.set(alias, entry.hash);
+      }
     }
   } catch (error) {
     if (error && error.code !== 'ENOENT') lastError = `vault load: ${String(error.message || error)}`;
@@ -263,16 +281,29 @@ function noteAudit(kind, extra) {
 function remember(plaintext, rule, origin, label) {
   loadVault();
   const hash = hashOf(plaintext);
-  let entry = vault.entries.get(hash);
-  if (entry) {
-    entry.hits = (entry.hits || 0) + 1;
-    entry.lastHitAt = new Date().toISOString();
-    return entry.ph;
+  const ph = placeholderOf(plaintext);
+  const existing = vault.entries.get(hash);
+  if (existing) {
+    existing.hits = (existing.hits || 0) + 1;
+    existing.lastHitAt = new Date().toISOString();
+    // Upgrade a pre-0.4.0 entry in place. The old code stays in `aliases` and
+    // in byPh, so chips already written into old session logs still resolve.
+    if (existing.ph !== ph) {
+      const aliases = Array.isArray(existing.aliases) ? existing.aliases.slice() : [];
+      if (!aliases.includes(existing.ph)) aliases.push(existing.ph);
+      existing.aliases = aliases;
+      existing.ph = ph;
+      vault.byPh.set(ph, hash);
+      for (const alias of aliases) vault.byPh.set(alias, hash);
+      noteAudit('recode', { ph });
+      persistVault();
+    }
+    return existing.ph;
   }
-  const ph = `<SG_${hash}>`;
-  entry = {
+  const entry = {
     hash,
     ph,
+    aliases: [],
     enc: encrypt(plaintext),
     prefix: prefixOf(plaintext),
     preview: plaintext.length >= PREVIEW_MIN ? `${plaintext.slice(0, 8)}…` : '',
@@ -296,6 +327,7 @@ function remember(plaintext, rule, origin, label) {
 function entryView(entry) {
   return {
     ph: entry.ph,
+    aliases: Array.isArray(entry.aliases) ? entry.aliases.slice() : [],
     preview: entry.preview,
     rule: entry.rule,
     label: entry.label || entry.rule,
@@ -323,6 +355,62 @@ function entryViewForModel(entry) {
 }
 
 /* ---------------------------------------------------------------- rules -- */
+
+/**
+ * Field names are stronger evidence than value shape: a tool result carrying
+ * {"password": "..."} is a credential even when the value has no vendor prefix.
+ * Whole name segments only, so `author`, `tokenizer`, `secretary` stay clean.
+ */
+const SENSITIVE_KEY_WORDS = new Set([
+  'password', 'passwd', 'pwd', 'passphrase', 'pass', 'secret', 'token',
+  'apikey', 'accesskey', 'clientsecret', 'credential', 'credentials',
+  'auth', 'authorization', 'privatekey', 'dsn', 'connectionstring',
+  'accesstoken', 'refreshtoken', 'sessionkey', 'appkey', 'appsecret',
+]);
+const KEY_NEGATIVE = /(?:hint|policy|count|length|type|name|label|description|enabled|required|expiry|expires|ttl|url|path|example|placeholder|regex|pattern|schema|comment|help|text|title|error|message|status|state|flag|version|format|kind|mode|index|size|boolean|number|id|ids|list|map|set)$/i;
+const PLACEHOLDER_VALUE = /^(?:null|undefined|nil|none|n\/a|na|true|false|yes|no|unknown|empty|redacted|masked|hidden|placeholder|example|sample|dummy|fake|test|demo|todo|fixme|tbd|not[_-]?set[_-]?(?:yet)?|changeme|change[_-]?me|your[_-]?(?:password|passwd|token|key|secret|api[_-]?key)[_-]?(?:here)?|(?:password|passwd|secret|token|api[_-]?key)[_-]?(?:here|placeholder|example)?|x{2,}|\*{2,}|\.{2,}|-{2,}|\?{2,}|0{3,}|<[^>]{1,40}>|\$\{[^}]{1,60}\}|\{\{[^}]{1,60}\}\}|\$[A-Z_][A-Z0-9_]*|%\(?[a-z_]+\)?s)$/i;
+
+/** Values that are documentation, placeholders or template variables, not secrets. */
+function isPlaceholderValue(value) {
+  if (typeof value !== 'string') return false;
+  const v = value.trim();
+  if (v.length < 3 || v.includes(PH_HINT)) return true;
+  return PLACEHOLDER_VALUE.test(v);
+}
+
+function isSensitiveKey(key) {
+  if (typeof key !== 'string' || key.length > 64 || isIdentifierKey(key)) return false;
+  if (KEY_NEGATIVE.test(key)) return false;
+  if (/(密码|口令|密钥|令牌|凭证|私钥)/.test(key)) return true;
+  const parts = key.toLowerCase().replace(/([a-z0-9])([A-Z])/g, '$1 $2').split(/[^a-z0-9]+/).filter(Boolean);
+  return parts.some((part) => SENSITIVE_KEY_WORDS.has(part));
+}
+
+function labelForKey(key) {
+  const k = String(key).toLowerCase();
+  if (/pass|密码|口令/.test(k)) return '密码';
+  if (/token|令牌|jwt|bearer|auth/.test(k)) return '令牌';
+  if (/key|secret|密钥|凭证|credential|dsn|connection/.test(k)) return '密钥';
+  return '其它';
+}
+
+/** "key": "value" inside a JSON *string*. Only ingress gets these hits. */
+const STRUCT_FIELD_RE = /"(?<key>[A-Za-z0-9_.\-]{1,64})"\s*:\s*"(?<value>[^"\\]{1,200})"/gd;
+
+function structuralHits(text) {
+  const out = [];
+  STRUCT_FIELD_RE.lastIndex = 0;
+  let match;
+  while ((match = STRUCT_FIELD_RE.exec(text)) !== null) {
+    const key = match.groups && match.groups.key;
+    const value = match.groups && match.groups.value;
+    const range = match.indices && match.indices.groups && match.indices.groups.value;
+    if (!key || !value || !range) continue;
+    if (!isSensitiveKey(key) || isPlaceholderValue(value)) continue;
+    out.push({ offset: range[0], end: range[1], value, rule: 'structured-field', label: labelForKey(key) });
+  }
+  return out;
+}
 
 const BUILTIN_RULES = [
   { id: 'openai-key', group: 0, re: /\bsk-[A-Za-z0-9_-]{16,}\b/g },
@@ -467,7 +555,7 @@ function entropyHits(text) {
 }
 
 /** Non-overlapping hits: [{offset, end, value, rule}]. Already-masked values are skipped. */
-function findHits(text) {
+function findHits(text, origin) {
   // A pathological custom rule can backtrack for minutes on a huge blob, and this
   // runs synchronously inside a hook — cap the window rather than freeze the host.
   const scan = text.length > MAX_SCAN_CHARS ? text.slice(0, MAX_SCAN_CHARS) : text;
@@ -503,6 +591,12 @@ function findHits(text) {
       hits.push({ offset, end, value: trimmed, rule: rule.id, label });
     }
   }
+  // A field name is strong evidence for user input and tool output, but a model
+  // writing an example JSON is not a leak. Keep structural hits off the
+  // outbound backstop so the model's own examples are not scrambled.
+  if (origin !== 'outbound') {
+    for (const hit of structuralHits(scan)) hits.push(hit);
+  }
   if (fileRules.entropy) {
     for (const hit of entropyHits(scan)) hits.push(hit);
   }
@@ -517,12 +611,17 @@ function findHits(text) {
 
 function scrubText(text, origin) {
   if (typeof text !== 'string' || text.length < 6) return [text, false];
-  const hits = findHits(text);
+  const hits = findHits(text, origin);
   if (!hits.length) return [text, false];
   let out = '';
   let cursor = 0;
+  let maskedAny = false;
   for (const hit of hits) {
+    // Obvious documentation placeholders win over every rule, including
+    // structural field names.
+    if (isPlaceholderValue(hit.value)) continue;
     out += text.slice(cursor, hit.offset);
+    maskedAny = true;
     try {
       // Leave the vendor prefix in the sentence; only the authenticating tail
       // becomes a placeholder. The vault still keys on the complete value.
@@ -538,7 +637,7 @@ function scrubText(text, origin) {
     cursor = hit.end;
   }
   out += text.slice(cursor);
-  return [out, true];
+  return [out, maskedAny];
 }
 
 /** Identifier-shaped keys carry handles, not secrets; rewriting one breaks lookups. */
@@ -554,7 +653,22 @@ function isIdentifierKey(key) {
 function scrubDeep(value, origin, key) {
   if (typeof value === 'string') {
     if (isIdentifierKey(key)) return [value, false];
-    return scrubText(value, origin);
+    const [scrubbed, did] = scrubText(value, origin);
+    if (did) return [scrubbed, true];
+    // Already-parsed objects: the field name is the strongest signal and the
+    // value may be a short password with no vendor prefix at all. Never do
+    // this on outbound text — a model's example JSON is not a leak.
+    if (origin !== 'outbound' && key && isSensitiveKey(key) && !isPlaceholderValue(value)) {
+      try {
+        const ph = remember(value, 'structured-field', origin, labelForKey(key));
+        stats.maskedRuns += 1;
+        return [ph, true];
+      } catch (error) {
+        lastError = `capture: ${String((error && error.message) || error)}`;
+        stats.failOpen += 1;
+      }
+    }
+    return [value, false];
   }
   if (Array.isArray(value)) {
     let changed = false;

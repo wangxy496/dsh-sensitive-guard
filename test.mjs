@@ -4,6 +4,8 @@
  *
  *   node test.mjs
  */
+import { execFileSync } from 'node:child_process';
+import { createHash, createHmac } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -50,7 +52,7 @@ mod.apply(ctx);
 console.log('host registration');
 check('inject is [tools]', JSON.stringify(mod.inject) === '["tools"]');
 check('two tools registered', tools.size === 2, [...tools.keys()].join(','));
-check('two routes registered', routes.size === 3, [...routes.keys()].join(','));
+check('three routes registered', routes.size === 3, [...routes.keys()].join(','));
 check('three hooks registered', listeners.size === 3, [...listeners.keys()].join(','));
 
 const pre = listeners.get('agent/pre-step')[0];
@@ -415,11 +417,117 @@ const withSpace = await runPre('我的密码是 123456 吗?');
 const noSpace = await runPre('我的密码是123456吗');
 const fullComma = await runPre('我的密码是123456，对吗');
 const bare = await runPre('密码是 123456 吗');
-check('语气词留在占位符外（有空格）', withSpace === '我的密码是 <SG_8d969eef6eca> 吗?', withSpace);
-check('语气词留在占位符外（无空格）', noSpace === '我的密码是<SG_8d969eef6eca>吗', noSpace);
-check('全角逗号切断取值', fullComma === '我的密码是<SG_8d969eef6eca>，对吗', fullComma);
+const particlePh = (withSpace.match(/<SG_[0-9a-f]{12}>/) || [])[0];
+check('语气词留在占位符外（有空格）', withSpace === `我的密码是 ${particlePh} 吗?`, withSpace);
+check('语气词留在占位符外（无空格）', noSpace === `我的密码是${particlePh}吗`, noSpace);
+check('全角逗号切断取值', fullComma === `我的密码是${particlePh}，对吗`, fullComma);
 check('四种写法共用同一占位符', new Set([withSpace, noSpace, fullComma, bare].map((s) => (s.match(/<SG_[0-9a-f]{12}>/) || [''])[0])).size === 1);
 check('句尾问号不被吞进密码', (await runPre('我的密码是 abcdef?')).endsWith('<SG_') === false);
+
+/* --------------------------------------------------- structured fields -- */
+
+console.log('structured fields');
+
+const jsonOne = await runPre('{"host":"db.internal","password":"Abc!23456","note":"hello"}');
+check('JSON 文本：字段名说了算', /"password"\s*:\s*"<SG_[0-9a-f]{12}>"/.test(jsonOne), JSON.stringify(jsonOne));
+check('JSON 文本：键名与别的值不变', jsonOne.includes('"host":"db.internal"') && jsonOne.includes('"note":"hello"'), JSON.stringify(jsonOne));
+
+for (const [name, text] of [
+  ['credential', '{"credential": "9f8e7d6c5b4a3210"}'],
+  ['db_pass', '{"db_pass": "Abc!23456"}'],
+  ['HTTP 头式字段名', '{"X-Auth-Credential": "9f8e7d6c5b4a3210"}'],
+  ['带后缀的字段名', '{"password_hash": "9f8e7d6c5b4a3210"}'],
+]) {
+  const out = await runPre(text);
+  check(`JSON 文本：${name}`, /<SG_[0-9a-f]{12}>/.test(out), JSON.stringify(out));
+}
+
+for (const [name, text] of [
+  ['示例占位', '{"password": "your_password_here"}'],
+  ['模板变量', '{"password": "${DB_PASS}"}'],
+  ['尖括号占位', '{"token": "<your-token>"}'],
+  ['字段名是描述', '{"password_policy": "must be 8 chars"}'],
+]) {
+  const out = await runPre(text);
+  check(`JSON 文本不误伤：${name}`, out === text, JSON.stringify(out));
+}
+
+const obj = { password: 'Abc!23456', db_pass: 'Zx9Kp2', credential: '9f8e7d6c', note: 'hello' };
+const objOut = await runPre(obj);
+check('已解析对象：敏感字段的值被遮', ['password', 'db_pass', 'credential'].every((k) => /^<SG_[0-9a-f]{12}>$/.test(objOut[k])), JSON.stringify(objOut));
+check('已解析对象：键名全保留', Object.keys(objOut).join(',') === Object.keys(obj).join(','), JSON.stringify(Object.keys(objOut)));
+check('已解析对象：普通值不变', objOut.note === 'hello', JSON.stringify(objOut));
+
+const exampleJson = '{"password": "Abc!23456"}';
+const exampleStream = streamFn({}, () => (async function* () { yield { type: 'text-delta', text: exampleJson }; })());
+const exampleChunks = [];
+for await (const c of exampleStream) exampleChunks.push(c.text);
+check('模型输出的示例 JSON 不被改写', exampleChunks[0] === exampleJson, JSON.stringify(exampleChunks));
+
+console.log('placeholder hardening');
+const shortOut = await runPre('我的密码是 123456');
+const shortPh = (shortOut.match(/<SG_[0-9a-f]{12}>/) || [])[0];
+check('占位符不是 sha256(明文) 前缀', Boolean(shortPh) && !shortPh.includes(createHash('sha256').update('123456').digest('hex').slice(0, 12)), shortPh);
+const vaultKey = fs.readFileSync(path.join(TEMP_HOME, 'sensitive-guard', 'vault.key'));
+const expectedPh = `<SG_${createHmac('sha256', vaultKey).update('123456').digest('hex').slice(0, 12)}>`;
+check('占位符 = HMAC(vault.key, 明文)', shortPh === expectedPh, `${shortPh} vs ${expectedPh}`);
+check('同一明文仍是同一占位符', (await runPre('我的密码是 123456')).includes(shortPh));
+
+console.log('vault aliases');
+const aliasRes = fakeRes();
+await routes.get('/guard/vault').handler({ method: 'GET', socket: { remoteAddress: '127.0.0.1' }, headers: { host: 'localhost:3080' } }, aliasRes);
+const aliasBody = JSON.parse(aliasRes.body || '{}');
+check('保管库条目带 aliases 字段', Array.isArray((aliasBody.entries[0] || {}).aliases), JSON.stringify(aliasBody.entries[0] || {}));
+
+/* ------------------------------------------------- upgrade from 0.3.x -- */
+
+console.log('legacy placeholder upgrade');
+const legacySecret = '123456';
+const legacyPh = `<SG_${createHash('sha256').update(legacySecret).digest('hex').slice(0, 12)}>`;
+const legacyHash = createHash('sha256').update(legacySecret).digest('hex').slice(0, 12);
+// Vault writes are debounced by 250ms; let the capture above reach disk before
+// rewriting the entry to its 0.3.x shape.
+await new Promise((r) => setTimeout(r, 400));
+const vaultPath = path.join(TEMP_HOME, 'sensitive-guard', 'vault.json');
+const vaultRaw = JSON.parse(fs.readFileSync(vaultPath, 'utf8'));
+const legacyEntry = vaultRaw.entries.find((e) => e.hash === legacyHash);
+if (legacyEntry) {
+  // Pretend this entry was written by 0.3.4: old sha256 code, no aliases.
+  legacyEntry.ph = legacyPh;
+  legacyEntry.aliases = [];
+  fs.writeFileSync(vaultPath, JSON.stringify({ version: 1, entries: vaultRaw.entries }));
+  const probe = [
+    "import { Readable } from 'node:stream';",
+    "const mod = await import(process.argv[1]);",
+    "const listeners = new Map(); const routes = new Map();",
+    "const ctx = { on(n,f){ if(!listeners.has(n)) listeners.set(n,[]); listeners.get(n).push(f); },",
+    "  effect(fn){ try{fn()}catch{} return ()=>{}; }, tools:{register:()=>()=>{}},",
+    "  webServer:{register(r){ routes.set(r.path,r); return ()=>{}; }}, inject(_d,cb){cb(ctx);} };",
+    "mod.apply(ctx);",
+    "const pre = listeners.get('agent/pre-step')[0];",
+    "const d = await pre({messages:[{content:'我的密码是 123456'}]}, async()=>({kind:'enter',messages:[]}));",
+    "const text = d.messages.length ? d.messages[0].content : '我的密码是 123456';",
+    "const neu = (text.match(/<SG_[0-9a-f]{12}>/)||[])[0] || '';",
+    "const reveal = routes.get('/guard/reveal');",
+    "async function ask(ph){ const res={status:0,body:'',writeHead(c){this.status=c;},end(b){this.body=String(b||'');}};",
+    "  await reveal.handler(Object.assign(Readable.from([Buffer.from(JSON.stringify({placeholder:ph}))]), {",
+    "    method:'POST', socket:{remoteAddress:'127.0.0.1'}, headers:{host:'localhost:3080','content-type':'application/json'} }), res);",
+    "  return {status:res.status, plaintext:(JSON.parse(res.body||'{}')).plaintext}; }",
+    "const old = await ask(process.argv[2]);",
+    "const fresh = await ask(neu);",
+    "process.stdout.write(JSON.stringify({ neu, old, fresh }));",
+  ].join('\n');
+  const stdout = execFileSync(process.execPath, [
+    '--input-type=module', '-e', probe,
+    pathToFileURL(path.join(ROOT, 'index.js')).href, legacyPh,
+  ], { env: { ...process.env, DSH_HOME: TEMP_HOME }, encoding: 'utf8' });
+  const upgraded = JSON.parse(stdout);
+  check('升级后新代号不再是旧哈希', upgraded.neu !== legacyPh && /^<SG_[0-9a-f]{12}>$/.test(upgraded.neu), upgraded.neu);
+  check('旧会话里的代号仍能解锁', upgraded.old.status === 200 && upgraded.old.plaintext === legacySecret, JSON.stringify(upgraded.old));
+  check('新代号也能解锁同一条', upgraded.fresh.status === 200 && upgraded.fresh.plaintext === legacySecret, JSON.stringify(upgraded.fresh));
+} else {
+  check('找到用于升级测试的 vault 条目', false, `missing ${legacySecret} in ${vaultRaw.entries.map((e) => e.hash).join(',')}`);
+}
 
 /* --------------------------------------------------------------------- */
 
