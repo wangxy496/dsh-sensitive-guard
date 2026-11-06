@@ -1,6 +1,6 @@
 {
   "name": "dsh-sensitive-guard",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "敏感保护：进入模型上下文前把密钥/令牌/密码替换为 <SG_> 占位符，明文加密存本地保管库；设置页与对话内提供小锁点击还原，工具可将明文导出为 0600 文件供命令执行时使用。",
   "license": "MIT",
   "author": "wangxinyu",

@@ -462,7 +462,14 @@ window.__ModuleLoader__.load({
         .then((res) => (res.ok ? res.json() : null))
         .then((json) => {
           if (json && Array.isArray(json.entries)) {
-            metaByPh = new Map(json.entries.map((e) => [e.ph, e]));
+            const map = new Map();
+            for (const entry of json.entries) {
+              map.set(entry.ph, entry);
+              // Pre-0.4.0 codes are kept as aliases so chips in old sessions
+              // still pick up the right colour.
+              for (const alias of Array.isArray(entry.aliases) ? entry.aliases : []) map.set(alias, entry);
+            }
+            metaByPh = map;
           }
           return metaByPh;
         })
