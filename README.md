@@ -45,7 +45,7 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 ```json
 {
   "dependencies": {
-    "dsh-sensitive-guard": "0.3.2"
+    "dsh-sensitive-guard": "0.4.0"
   },
   "dsh": {
     "profile": {
