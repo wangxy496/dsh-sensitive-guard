@@ -25,27 +25,76 @@ window.__ModuleLoader__.load({
       hide: '隐藏明文',
       refresh: '刷新',
       autoHide: '20 秒后自动重新遮挡',
-      colValue: '值',
+      colValue: '名称 / 值',
+      colCategory: '分类',
       colKind: '规则',
-      colTime: '入库时间',
-      colHits: '命中',
+      copyPlain: '复制明文',
+      copyOk: '已复制',
+      copyFail: '复制失败',
       stats: '共 {count} 条 · 揭示只记录在本机',
       placeholder: '上下文占位符格式：<SG_十六进制>',
       usage: '模型侧取用：sensitive_guard_export 工具把明文写入 0600 文件，命令里用 "$(cat <路径>)" 引用，明文不进上下文。',
       statusOn: '保护中',
       statusOff: '已暂停',
+      statusDisabled: '保护已关闭',
       pause30: '暂停 30 分钟',
       pause120: '暂停 2 小时',
       pauseRestart: '暂停到重启',
       pauseRestartLeft: '重启前不再脱敏',
       resume: '恢复保护',
+      disable: '关闭保护',
+      enable: '开启保护',
       pausedHint: '暂停期间不做任何脱敏，明文会直接进入上下文与日志。到期自动恢复。',
+      disabledHint: '保护已持久关闭：不做任何脱敏，明文直接进入上下文与日志；重启也不会自动恢复，需要时手动点「开启保护」。',
+      disableTitle: '关闭保护？',
+      disableBody: '关闭后所有脱敏立即停止，明文会直接进入模型上下文与日志，而且重启也不会自动恢复。只有再点「开启保护」才会恢复。建议优先用限时暂停。',
+      disableConfirm: '确认关闭',
+      disableCancel: '取消',
       lanExposed: '⚠ 本页经局域网访问（允许网段：{cidrs}）。这条链路上的明文与预览对该网段可见，用完建议把 allowCidrs 收回。',
       restrictedTitle: '只读：这台机器不是服务所在的本机',
       restrictedBody: '服务端默认只接受本机回环，所以这里能看到“有哪些凭据被保护”，看不到值。当前访问地址：{host}',
       restrictedFile: '要在这里查看或揭示明文，二选一。① 在服务所在机器上编辑下面这个文件，加一行：',
       restrictedAlt: '② 或者直接在服务所在机器的浏览器打开 http://127.0.0.1:<端口>。',
       restrictedUnlock: '需在服务所在的本机打开才能揭示',
+      tabRules: '自动检测规则',
+      tabEntries: '敏感数据管理',
+      rulesSearch: '搜索规则名称或关键词',
+      rulesAll: '全部状态',
+      rulesOn: '已开启',
+      rulesOff: '已关闭',
+      rulesPrev: '上一页',
+      rulesNext: '下一页',
+      rulesPage: '第 {current} / {total} 页',
+      rulesNoMatch: '没有匹配的规则',
+      rulesLoading: '载入规则中…',
+      ruleSystem: '系统规则',
+      ruleBuiltin: '内置规则',
+      ruleCustom: '自定义规则',
+      ruleApprox: '近似转换',
+      ruleLoose: '宽松规则',
+      ruleSkipped: '{count} 条文件型规则不适用文本检测',
+      addEntry: '添加敏感数据',
+      addEntryTitle: '添加敏感数据',
+      addEntryName: '例如：公司内网口令',
+      addEntryNameLabel: '名称',
+      addEntryPlain: '明文内容',
+      addEntryPlainLabel: '明文',
+      addEntryKind: '类型',
+      addEntryKindLabel: '类型',
+      addEntrySubmit: '保存',
+      addEntryCancel: '取消',
+      addEntryClose: '关闭',
+      addEntryOk: '已加密保存，以后会自动遮挡',
+      addEntryFail: '保存失败，确认是在本机打开的页面',
+      addEntryNeedKind: '给自定义分类起个名字',
+      addKindCustom: '自定义分类…',
+      addKindCustomLabel: '分类名称',
+      addKindCustomPlaceholder: '例如：公司内部凭据',
+      entrySearch: '搜索名称、预览或代号',
+      entryDelete: '删除',
+      kindPassword: '密码',
+      kindToken: '令牌',
+      kindKey: '密钥',
     };
     const en = {
       nav: 'Sensitive guard',
@@ -58,27 +107,76 @@ window.__ModuleLoader__.load({
       hide: 'Hide secret',
       refresh: 'Refresh',
       autoHide: 'Re-masks in 20 seconds',
-      colValue: 'Value',
+      colValue: 'Name / value',
+      colCategory: 'Type',
       colKind: 'Rule',
-      colTime: 'Captured',
-      colHits: 'Hits',
+      copyPlain: 'Copy plaintext',
+      copyOk: 'Copied',
+      copyFail: 'Copy failed',
       stats: '{count} entries · reveals stay on this machine',
       placeholder: 'Context placeholder format: <SG_hex>',
       usage: 'For the agent: sensitive_guard_export writes the plaintext to a 0600 file; reference it as "$(cat <path>)" so plaintext never enters context.',
       statusOn: 'Protecting',
       statusOff: 'Paused',
+      statusDisabled: 'Protection off',
       pause30: 'Pause 30 min',
       pause120: 'Pause 2 h',
       pauseRestart: 'Pause until restart',
       pauseRestartLeft: 'No masking until restart',
       resume: 'Resume',
+      disable: 'Disable protection',
+      enable: 'Enable protection',
       pausedHint: 'Nothing is masked while paused — plaintext reaches context and logs. Re-arms automatically.',
+      disabledHint: 'Protection is persistently off: nothing is masked, plaintext reaches context and logs, and a restart will NOT re-arm it. Click "Enable protection" to restore it.',
+      disableTitle: 'Disable protection?',
+      disableBody: 'All masking stops immediately. Plaintext will reach the model context and logs, and a restart will not re-arm the guard — only "Enable protection" restores it. Prefer a timed pause when possible.',
+      disableConfirm: 'Disable',
+      disableCancel: 'Cancel',
       lanExposed: '⚠ This page is served over LAN (allowed: {cidrs}). Plaintext and previews on this route are visible to that network; narrow allowCidrs when you are done.',
       restrictedTitle: 'Read-only: this machine is not the one running the server',
       restrictedBody: 'The server only accepts loopback by default, so you can see which credentials are protected, but not their values. Current address: {host}',
       restrictedFile: 'To view or reveal values here, pick one. ① On the server machine, edit this file and add one line:',
       restrictedAlt: '② Or open http://127.0.0.1:<port> in a browser on that machine.',
       restrictedUnlock: 'Reveal requires the browser on the server machine',
+      tabRules: 'Detection rules',
+      tabEntries: 'Sensitive data',
+      rulesSearch: 'Search rule names or keywords',
+      rulesAll: 'All statuses',
+      rulesOn: 'Enabled',
+      rulesOff: 'Disabled',
+      rulesPrev: 'Previous',
+      rulesNext: 'Next',
+      rulesPage: 'Page {current} / {total}',
+      rulesNoMatch: 'No matching rules',
+      rulesLoading: 'Loading rules…',
+      ruleSystem: 'System',
+      ruleBuiltin: 'Built-in',
+      ruleCustom: 'Custom',
+      ruleApprox: 'Approximate',
+      ruleLoose: 'Loose',
+      ruleSkipped: '{count} file-only rule(s) skipped',
+      addEntry: 'Add sensitive data',
+      addEntryTitle: 'Add sensitive data',
+      addEntryName: 'e.g. intranet password',
+      addEntryNameLabel: 'Name',
+      addEntryPlain: 'Plaintext value',
+      addEntryPlainLabel: 'Plaintext',
+      addEntryKind: 'Type',
+      addEntryKindLabel: 'Type',
+      addEntrySubmit: 'Save',
+      addEntryCancel: 'Cancel',
+      addEntryClose: 'Close',
+      addEntryOk: 'Saved encrypted; it will be masked from now on',
+      addEntryFail: 'Could not save; open this page on the server machine',
+      addEntryNeedKind: 'Give the custom type a name',
+      addKindCustom: 'Custom type…',
+      addKindCustomLabel: 'Type name',
+      addKindCustomPlaceholder: 'e.g. internal credential',
+      entrySearch: 'Search name, preview or placeholder',
+      entryDelete: 'Delete',
+      kindPassword: 'Password',
+      kindToken: 'Token',
+      kindKey: 'Key',
     };
 
     const REVEAL_MS = 20_000;
@@ -114,11 +212,90 @@ window.__ModuleLoader__.load({
       cursor: 'pointer',
     };
     const focusCss = '.dsguard-btn:focus-visible{outline:var(--dsw-focus-ring-width,2px) solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:2px}';
+    /** Some hosts only substitute a single {count}; fill placeholders locally too. */
+    function fillTemplate(text, params) {
+      let out = String(text || '');
+      for (const [k, v] of Object.entries(params || {})) out = out.replace(`{${k}}`, String(v));
+      return out;
+    }
+    const inputStyle = {
+      flex: '1 1 200px', minWidth: 0, padding: '7px 10px', borderRadius: 8,
+      border: '1px solid var(--dsw-alias-border-l2)',
+      background: 'var(--dsw-alias-bg-layer-1)',
+      color: 'var(--dsw-alias-label-primary)', fontSize: 12,
+    };
+    const selectStyle = { ...inputStyle, flex: '0 0 auto', cursor: 'pointer' };
+    const primaryBtn = {
+      ...btnStyle, width: 'auto', height: 32, padding: '0 14px', fontSize: 12,
+      background: 'var(--dsw-alias-label-primary)', color: 'var(--dsw-alias-bg-layer-1)',
+      border: '1px solid transparent',
+    };
+    const dangerBtn = {
+      ...btnStyle, width: 'auto', height: 30, padding: '0 10px', fontSize: 12,
+      color: 'var(--dsw-alias-state-error-primary, #e5534b)',
+      borderColor: 'rgba(229,83,75,0.55)',
+    };
+    const dangerPrimary = {
+      ...dangerBtn, padding: '0 14px', fontWeight: 500,
+      background: 'rgba(229,83,75,0.14)',
+    };
+    const tagStyle = {
+      padding: '2px 7px', borderRadius: 6, fontSize: 11,
+      background: 'var(--dsw-alias-bg-layer-1)',
+      color: 'var(--dsw-alias-label-secondary)',
+      border: '1px solid var(--dsw-alias-border-l2)',
+    };
+    const warnTagStyle = { ...tagStyle, color: 'var(--dsw-alias-state-warn-label)', borderColor: 'rgba(239,159,39,0.55)' };
+    const tabBarStyle = { display: 'flex', gap: 8, borderBottom: '1px solid var(--dsw-alias-border-l2)', paddingBottom: 8 };
+    function tabStyle(active) {
+      return {
+        ...btnStyle, width: 'auto', height: 30, padding: '0 12px', fontSize: 12,
+        border: '1px solid transparent',
+        background: active ? 'var(--dsw-alias-bg-layer-1)' : 'transparent',
+        color: active ? 'var(--dsw-alias-label-primary)' : 'var(--dsw-alias-label-secondary)',
+      };
+    }
+    function switchStyle(on) {
+      return {
+        ...btnStyle, width: 38, height: 22, borderRadius: 11, padding: 0,
+        background: on ? '#1D9E75' : 'var(--dsw-alias-border-l2)',
+        border: '1px solid transparent',
+        justifyContent: on ? 'flex-end' : 'flex-start',
+      };
+    }
+    const knobStyle = { width: 16, height: 16, borderRadius: 8, background: '#fff', display: 'block' };
 
     function LockGlyph({ open }) {
       return h('svg', { width: 15, height: 15, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.3, 'aria-hidden': 'true' },
         h('rect', { x: 3, y: 7.5, width: 10, height: 6.5, rx: 1.6 }),
         h('path', { d: open ? 'M5.5 7.5V5.5a2.5 2.5 0 0 1 4.9-.7' : 'M5.5 7.5V5.5a2.5 2.5 0 0 1 5 0v2' }));
+    }
+
+    function CopyGlyph() {
+      return h('svg', { width: 15, height: 15, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.3, 'aria-hidden': 'true' },
+        h('rect', { x: 5.5, y: 5.5, width: 8, height: 8, rx: 1.4 }),
+        h('path', { d: 'M10.5 3.5H4A1.5 1.5 0 0 0 2.5 5v6.5' }));
+    }
+
+    /** Never put plaintext into model context: this is a browser-side copy. */
+    async function copyToClipboard(text) {
+      try {
+        if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch { /* fall through to the legacy path */ }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch { return false; }
     }
 
     function formatLeft(ms) {
@@ -171,6 +348,284 @@ window.__ModuleLoader__.load({
           t('restrictedAlt')));
     }
 
+    /** Detection-rule catalogue: search, status filter, pagination, per-rule switch. */
+    function RulesPane({ t }) {
+      const [data, setData] = useState(null);
+      const [query, setQuery] = useState('');
+      const [filter, setFilter] = useState('all');
+      const [page, setPage] = useState(1);
+      const [busy, setBusy] = useState(null);
+      const alive = useRef(true);
+
+      const load = useCallback(async () => {
+        try {
+          const res = await fetch('/guard/rules', { cache: 'no-store' });
+          const json = await res.json().catch(() => null);
+          if (alive.current && res.ok && json) setData(json);
+        } catch { /* leave the last known list */ }
+      }, []);
+      useEffect(() => {
+        alive.current = true;
+        load();
+        return () => { alive.current = false; };
+      }, [load]);
+
+      const toggle = useCallback(async (id, enabled) => {
+        setBusy(id);
+        try {
+          const res = await fetch('/guard/rules', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ id, enabled }),
+          });
+          const json = await res.json().catch(() => null);
+          if (alive.current && res.ok && json) setData(json);
+        } catch { /* keep the old state */ }
+        if (alive.current) setBusy(null);
+      }, []);
+
+      const all = (data && data.rules) || [];
+      const q = String(query || '').trim().toLowerCase();
+      const filtered = all.filter((r) => {
+        if (filter === 'on' && !r.enabled) return false;
+        if (filter === 'off' && r.enabled) return false;
+        if (!q) return true;
+        return `${r.name} ${r.id} ${(r.keywords || []).join(' ')}`.toLowerCase().includes(q);
+      });
+      // Enabled rules first, so the 14 default-off ones collect on the last page
+      // instead of being scattered through the list.
+      const sorted = filtered.slice().sort((a, b) => (a.enabled === b.enabled ? 0 : a.enabled ? -1 : 1));
+      const size = (data && data.pageSize) || 20;
+      const pages = Math.max(1, Math.ceil(sorted.length / size));
+      const current = Math.min(Math.max(1, page), pages);
+      const rows = sorted.slice((current - 1) * size, current * size);
+      const sourceLabel = (r) => (r.source === 'gitleaks' ? t('ruleSystem') : r.source === 'custom' ? t('ruleCustom') : t('ruleBuiltin'));
+
+      let listNode;
+      if (!data) {
+        listNode = h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, t('rulesLoading'));
+      } else if (rows.length === 0) {
+        listNode = h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, t('rulesNoMatch'));
+      } else {
+        listNode = h('div', { style: { display: 'grid', gap: 8 } },
+          rows.map((r) => h('div', { key: r.id, style: boxStyle },
+            h('span', { style: { flex: '1 1 auto', minWidth: 0, display: 'grid', gap: 5 } },
+              h('span', { style: { fontSize: 13, color: 'var(--dsw-alias-label-primary)' } }, r.name),
+              h('span', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+                (r.detectors || []).map((d) => h('span', { key: d, style: tagStyle }, d)),
+                h('span', { style: tagStyle }, sourceLabel(r)),
+                r.approx ? h('span', { style: warnTagStyle }, t('ruleApprox')) : null,
+                r.tier === 'loose' ? h('span', { style: warnTagStyle }, t('ruleLoose')) : null)),
+            h('button', {
+              type: 'button', className: 'dsguard-btn', style: switchStyle(r.enabled),
+              'aria-pressed': Boolean(r.enabled), 'aria-label': r.name,
+              disabled: busy === r.id,
+              onClick: () => toggle(r.id, !r.enabled),
+            }, h('span', { style: knobStyle })))));
+      }
+
+      return h('div', { style: { display: 'grid', gap: 12 } },
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+          h('select', {
+            value: filter, style: selectStyle,
+            onChange: (e) => { setFilter(e && e.target ? e.target.value : 'all'); setPage(1); },
+          },
+            h('option', { value: 'all' }, t('rulesAll')),
+            h('option', { value: 'on' }, t('rulesOn')),
+            h('option', { value: 'off' }, t('rulesOff'))),
+          h('input', {
+            type: 'text', value: query, placeholder: t('rulesSearch'), style: inputStyle,
+            onChange: (e) => { setQuery(e && e.target ? e.target.value : ''); setPage(1); },
+          }),
+          h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } },
+            `${filtered.length} / ${all.length}`)),
+        listNode,
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 } },
+          h('button', {
+            type: 'button', className: 'dsguard-btn',
+            style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12, opacity: current <= 1 ? 0.45 : 1 },
+            disabled: current <= 1, onClick: () => setPage(current - 1),
+          }, t('rulesPrev')),
+          h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } },
+            fillTemplate(t('rulesPage', { current: String(current), total: String(pages) }),
+              { current: String(current), total: String(pages) })),
+          h('button', {
+            type: 'button', className: 'dsguard-btn',
+            style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12, opacity: current >= pages ? 0.45 : 1 },
+            disabled: current >= pages, onClick: () => setPage(current + 1),
+          }, t('rulesNext'))),
+        data && data.skipped && data.skipped.length
+          ? h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)', margin: 0 } },
+            fillTemplate(t('ruleSkipped', { count: String(data.skipped.length) }),
+              { count: String(data.skipped.length) }))
+          : null);
+    }
+
+    /** Add a secret by hand in a modal. Plaintext is sent once, never written to config. */
+    const KIND_CUSTOM = '__custom__';
+    function AddEntryForm({ t, onAdded, disabled }) {
+      const [open, setOpen] = useState(false);
+      const [name, setName] = useState('');
+      const [plain, setPlain] = useState('');
+      const [kind, setKind] = useState('密码');
+      const [customKind, setCustomKind] = useState('');
+      const [note, setNote] = useState('');
+
+      const close = () => { setOpen(false); setPlain(''); setCustomKind(''); };
+      useEffect(() => {
+        if (!open) return undefined;
+        const onKey = (e) => { if (e && e.key === 'Escape') close(); };
+        try {
+          window.addEventListener('keydown', onKey);
+          return () => window.removeEventListener('keydown', onKey);
+        } catch { return undefined; }
+      }, [open]);
+
+      const fieldStyle = { display: 'grid', gap: 5 };
+      const labelStyle = { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' };
+      const fullInput = { ...inputStyle, flex: 'none', width: '100%', boxSizing: 'border-box' };
+
+      const submit = async () => {
+        const value = String(plain || '').trim();
+        if (!value) return;
+        const resolved = kind === KIND_CUSTOM ? String(customKind || '').trim() : kind;
+        if (!resolved) { setNote(t('addEntryNeedKind')); return; }
+        try {
+          const res = await fetch('/guard/entries', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ action: 'add', name: String(name || '').trim(), plaintext: value, kind: resolved }),
+          });
+          if (!res.ok) throw new Error('failed');
+          setName(''); close(); setNote(t('addEntryOk'));
+          if (onAdded) onAdded();
+        } catch { setNote(t('addEntryFail')); }
+      };
+
+      if (!open) {
+        return h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+          h('button', {
+            type: 'button', className: 'dsguard-btn', style: primaryBtn,
+            disabled, onClick: () => { setNote(''); setOpen(true); },
+          }, t('addEntry')),
+          note ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } }, note) : null);
+      }
+
+      return h('div', {
+        style: {
+          position: 'fixed', inset: 0, zIndex: 9999, padding: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.45)',
+        },
+        onClick: (e) => { if (e && e.target === e.currentTarget) close(); },
+      },
+        h('div', {
+          style: {
+            width: 'min(420px, 100%)', display: 'grid', gap: 14, padding: 20,
+            borderRadius: 14, background: 'var(--dsw-alias-bg-layer-1)',
+            border: '1px solid var(--dsw-alias-border-l2)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+            h('h3', { style: { margin: 0, fontSize: 15, fontWeight: 500, color: 'var(--dsw-alias-label-primary)' } }, t('addEntryTitle')),
+            h('button', {
+              type: 'button', className: 'dsguard-btn',
+              style: { ...btnStyle, width: 26, height: 26, fontSize: 14 },
+              'aria-label': t('addEntryClose'), title: t('addEntryClose'),
+              onClick: close,
+            }, '×')),
+          h('div', { style: fieldStyle },
+            h('span', { style: labelStyle }, t('addEntryNameLabel')),
+            h('input', {
+              type: 'text', value: name, placeholder: t('addEntryName'), style: fullInput,
+              onChange: (e) => setName(e && e.target ? e.target.value : ''),
+            })),
+          h('div', { style: fieldStyle },
+            h('span', { style: labelStyle }, t('addEntryPlainLabel')),
+            h('input', {
+              type: 'text', value: plain, placeholder: t('addEntryPlain'), style: fullInput,
+              onChange: (e) => setPlain(e && e.target ? e.target.value : ''),
+            })),
+          h('div', { style: fieldStyle },
+            h('span', { style: labelStyle }, t('addEntryKindLabel')),
+            h('select', {
+              value: kind, style: { ...fullInput, cursor: 'pointer' },
+              onChange: (e) => setKind(e && e.target ? e.target.value : '密码'),
+            },
+              h('option', { value: '密码' }, t('kindPassword')),
+              h('option', { value: '令牌' }, t('kindToken')),
+              h('option', { value: '密钥' }, t('kindKey')),
+              h('option', { value: KIND_CUSTOM }, t('addKindCustom')))),
+          kind === KIND_CUSTOM
+            ? h('div', { style: fieldStyle },
+              h('span', { style: labelStyle }, t('addKindCustomLabel')),
+              h('input', {
+                type: 'text', value: customKind, placeholder: t('addKindCustomPlaceholder'), style: fullInput,
+                onChange: (e) => setCustomKind(e && e.target ? e.target.value : ''),
+              }))
+            : null,
+          note ? h('p', { style: { margin: 0, fontSize: 11, color: 'var(--dsw-alias-state-warn-label)' } }, note) : null,
+          h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 2 } },
+            h('button', {
+              type: 'button', className: 'dsguard-btn',
+              style: { ...btnStyle, width: 'auto', padding: '0 14px', fontSize: 12 },
+              onClick: close,
+            }, t('addEntryCancel')),
+            h('button', {
+              type: 'button', className: 'dsguard-btn', style: primaryBtn,
+              disabled, onClick: submit,
+            }, t('addEntrySubmit')))));
+    }
+
+    /** Destructive, persistent action — always confirm before disabling. */
+    function DisableConfirm({ t, onConfirm, onCancel }) {
+      useEffect(() => {
+        const onKey = (e) => { if (e && e.key === 'Escape') onCancel(); };
+        try {
+          window.addEventListener('keydown', onKey);
+          return () => window.removeEventListener('keydown', onKey);
+        } catch { return undefined; }
+      }, [onCancel]);
+      return h('div', {
+        style: {
+          position: 'fixed', inset: 0, zIndex: 9999, padding: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.45)',
+        },
+        onClick: (e) => { if (e && e.target === e.currentTarget) onCancel(); },
+      },
+        h('div', {
+          style: {
+            width: 'min(400px, 100%)', display: 'grid', gap: 14, padding: 20,
+            borderRadius: 14, background: 'var(--dsw-alias-bg-layer-1)',
+            border: '1px solid var(--dsw-alias-border-l2)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
+          },
+        },
+          h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' } },
+            h('h3', {
+              style: { margin: 0, fontSize: 15, fontWeight: 500, color: 'var(--dsw-alias-state-error-primary, #e5534b)' },
+            }, t('disableTitle')),
+            h('button', {
+              type: 'button', className: 'dsguard-btn',
+              style: { ...btnStyle, width: 26, height: 26, fontSize: 14 },
+              'aria-label': t('disableCancel'), title: t('disableCancel'),
+              onClick: onCancel,
+            }, '×')),
+          h('p', {
+            style: { margin: 0, fontSize: 12, lineHeight: 1.7, color: 'var(--dsw-alias-label-primary)' },
+          }, t('disableBody')),
+          h('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: 8 } },
+            h('button', {
+              type: 'button', className: 'dsguard-btn',
+              style: { ...btnStyle, width: 'auto', padding: '0 14px', fontSize: 12 },
+              onClick: onCancel,
+            }, t('disableCancel')),
+            h('button', {
+              type: 'button', className: 'dsguard-btn', style: dangerPrimary,
+              onClick: onConfirm,
+            }, t('disableConfirm')))));
+    }
+
     function GuardView({ t }) {
       const [data, setData] = useState(null);
       const [status, setStatus] = useState('loading');
@@ -179,6 +634,10 @@ window.__ModuleLoader__.load({
       // Set when the server explains a rejection; keeps the page actionable
       // instead of showing a bare "failed to load".
       const [denied, setDenied] = useState(null);
+      const [tab, setTab] = useState('entries');
+      const [entryQuery, setEntryQuery] = useState('');
+      const [copied, setCopied] = useState('');
+      const [confirmDisable, setConfirmDisable] = useState(false);
       const timers = useRef({});
       const alive = useRef(true);
 
@@ -268,17 +727,46 @@ window.__ModuleLoader__.load({
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload),
           });
-          if (res.ok) setGuard(await res.json());
+          if (res.ok) { setGuard(await res.json()); setConfirmDisable(false); }
         } catch { /* ignore */ }
+      }, []);
+
+      const deleteEntry = useCallback(async (ph) => {
+        try {
+          const res = await fetch('/guard/entries', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', placeholder: ph }),
+          });
+          if (res.ok) load();
+        } catch { /* leave the row in place */ }
+      }, [load]);
+
+      const copyPlaintext = useCallback(async (ph) => {
+        try {
+          const res = await fetch('/guard/reveal', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ placeholder: ph }),
+          });
+          if (!res.ok) throw new Error('failed');
+          const json = await res.json();
+          const ok = await copyToClipboard(json.plaintext || '');
+          if (!alive.current) return;
+          setCopied(ok ? ph : `error:${ph}`);
+          window.clearTimeout(timers.current.copy);
+          timers.current.copy = window.setTimeout(() => { if (alive.current) setCopied(''); }, 1800);
+        } catch {
+          if (alive.current) setCopied(`error:${ph}`);
+        }
       }, []);
 
       useEffect(() => { loadGuard(); }, [loadGuard]);
 
       const paused = Boolean(guard && guard.paused);
       const untilRestart = Boolean(guard && guard.untilRestart);
+      const disabled = Boolean(guard && guard.off);
 
       useEffect(() => {
-        if (!paused || untilRestart) return undefined;
+        if (!paused || untilRestart || disabled) return undefined;
         const id = window.setInterval(() => {
           setGuard((prev) => {
             if (!prev || !prev.paused) return prev;
@@ -288,53 +776,32 @@ window.__ModuleLoader__.load({
           });
         }, 1000);
         return () => window.clearInterval(id);
-      }, [paused, untilRestart, loadGuard]);
+      }, [paused, untilRestart, disabled, loadGuard]);
 
       const entries = (data && data.entries) || [];
+      const eq = String(entryQuery || '').trim().toLowerCase();
+      const visibleEntries = eq
+        ? entries.filter((e) => `${e.name || ''} ${e.preview || ''} ${e.ph} ${e.rule || ''}`.toLowerCase().includes(eq))
+        : entries;
       const access = (data && data.access) || denied || {};
       // Either the server degraded us to metadata-only, or it refused outright.
       const restricted = Boolean(data && data.restricted) || Boolean(denied);
 
-      return h('div', { style: { display: 'grid', gap: 14 } },
-        h('style', {}, focusCss),
-        restricted
-          ? h(RestrictedNotice, {
-            t,
-            host: access.host,
-            suggested: access.suggested,
-            dataDir: data && data.dataDir,
-          })
-          : h('div', {
-          style: {
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            flexWrap: 'wrap',
-            padding: '8px 12px',
-            borderRadius: 10,
-            border: `1px solid ${paused ? 'rgba(239,159,39,0.55)' : 'var(--dsw-alias-border-l2)'}`,
-            background: paused ? 'rgba(239,159,39,0.12)' : 'var(--dsw-alias-bg-layer-1)',
-          },
-        },
-          h('span', {
-            style: {
-              fontSize: 12,
-              fontWeight: 500,
-              color: paused ? 'var(--dsw-alias-state-warn-label)' : 'var(--dsw-alias-label-primary)',
-            },
-          }, paused ? `● ${t('statusOff')}` : `● ${t('statusOn')}`),
-          paused
-            ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } },
-              untilRestart ? t('pauseRestartLeft') : formatLeft(guard && guard.remainingMs))
-            : null,
-          h('span', { style: { flex: 1 } }),
-          paused
-            ? h('button', {
-              type: 'button',
-              className: 'dsguard-btn',
+      // One row of state controls: a persistent disable is always reachable,
+      // but it goes through a confirmation modal first.
+      const stateButtons = disabled
+        ? [h('button', {
+          key: 'enable', type: 'button', className: 'dsguard-btn',
+          style: { ...primaryBtn, width: 'auto', padding: '0 12px', fontSize: 12 },
+          onClick: () => applyPause({ action: 'enable' }),
+        }, t('enable'))]
+        : [
+          ...(paused
+            ? [h('button', {
+              key: 'resume', type: 'button', className: 'dsguard-btn',
               style: { ...btnStyle, width: 'auto', padding: '0 10px', fontSize: 12 },
               onClick: () => applyPause({ action: 'resume' }),
-            }, t('resume'))
+            }, t('resume'))]
             : [
               h('button', {
                 key: 'p30', type: 'button', className: 'dsguard-btn',
@@ -352,16 +819,73 @@ window.__ModuleLoader__.load({
                 onClick: () => applyPause({ action: 'pause', untilRestart: true }),
               }, t('pauseRestart')),
             ]),
-        paused
-          ? h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } }, t('pausedHint'))
-          : null,
+          h('button', {
+            key: 'disable', type: 'button', className: 'dsguard-btn',
+            style: dangerBtn, title: t('disableTitle'),
+            onClick: () => setConfirmDisable(true),
+          }, t('disable')),
+        ];
+
+      return h('div', { style: { display: 'grid', gap: 14 } },
+        h('style', {}, focusCss),
+        h('div', { style: tabBarStyle },
+          h('button', {
+            type: 'button', className: 'dsguard-btn', style: tabStyle(tab === 'rules'),
+            onClick: () => setTab('rules'),
+          }, t('tabRules')),
+          h('button', {
+            type: 'button', className: 'dsguard-btn', style: tabStyle(tab === 'entries'),
+            onClick: () => setTab('entries'),
+          }, t('tabEntries'))),
+        tab === 'rules'
+          ? h(RulesPane, { t })
+          : h('div', { style: { display: 'grid', gap: 14 } },
+        restricted
+          ? h(RestrictedNotice, {
+            t,
+            host: access.host,
+            suggested: access.suggested,
+            dataDir: data && data.dataDir,
+          })
+          : h('div', {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flexWrap: 'wrap',
+            padding: '8px 12px',
+            borderRadius: 10,
+            border: `1px solid ${disabled ? 'rgba(229,83,75,0.6)' : paused ? 'rgba(239,159,39,0.55)' : 'var(--dsw-alias-border-l2)'}`,
+            background: disabled ? 'rgba(229,83,75,0.12)' : paused ? 'rgba(239,159,39,0.12)' : 'var(--dsw-alias-bg-layer-1)',
+          },
+        },
+          h('span', {
+            style: {
+              fontSize: 12,
+              fontWeight: 500,
+              color: disabled
+                ? 'var(--dsw-alias-state-error-primary, #e5534b)'
+                : paused ? 'var(--dsw-alias-state-warn-label)' : 'var(--dsw-alias-label-primary)',
+            },
+          }, disabled ? `● ${t('statusDisabled')}` : paused ? `● ${t('statusOff')}` : `● ${t('statusOn')}`),
+          paused && !disabled
+            ? h('span', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)' } },
+              untilRestart ? t('pauseRestartLeft') : formatLeft(guard && guard.remainingMs))
+            : null,
+          h('span', { style: { flex: 1 } }),
+          ...stateButtons),
+        disabled
+          ? h('p', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-state-error-primary, #e5534b)', margin: 0 } }, t('disabledHint'))
+          : paused
+            ? h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } }, t('pausedHint'))
+            : null,
         data && data.access && data.access.level === 'lan'
           ? h('p', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } },
             t('lanExposed', { cidrs: (data.access.allowCidrs || []).join(', ') || '-' }))
           : null,
         h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' } },
           h('h3', { style: { fontSize: 13, fontWeight: 500, margin: 0, color: 'var(--dsw-alias-label-primary)' } }, t('heading')),
-          data ? h('span', { style: { fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, t('stats', { count: String(entries.length) })) : null,
+          data ? h('span', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, t('stats', { count: String(entries.length) })) : null,
           h('button', {
             type: 'button',
             className: 'dsguard-btn',
@@ -369,26 +893,34 @@ window.__ModuleLoader__.load({
             onClick: () => load(),
           }, t('refresh'))),
         h('p', { style: { fontSize: 12, lineHeight: 1.6, color: 'var(--dsw-alias-label-secondary)', margin: 0 } }, t('intro')),
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+          h(AddEntryForm, { t, onAdded: load, disabled: restricted }),
+          h('input', {
+            type: 'text', value: entryQuery, placeholder: t('entrySearch'), style: inputStyle,
+            onChange: (e) => setEntryQuery(e && e.target ? e.target.value : ''),
+          })),
         status === 'loading' && !data
-          ? h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, t('loading'))
+          ? h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, t('loading'))
           : status === 'error' && !data
             ? (denied ? null : h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-state-error-primary)' } }, t('error')))
-            : entries.length === 0
-              ? h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, t('empty'))
+            : visibleEntries.length === 0
+              ? h('p', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, t('empty'))
               : h('div', { style: { display: 'grid', gap: 8 } },
                 h('div', {
-                  style: { display: 'flex', gap: 10, padding: '0 12px', fontSize: 11, color: 'var(--dsw-alias-label-dimmed)' },
+                  style: { display: 'flex', gap: 10, padding: '0 12px', fontSize: 11, color: 'var(--dsw-alias-label-secondary)', whiteSpace: 'nowrap' },
                 },
-                  h('span', { style: { flex: '1 1 46%' } }, t('colValue')),
-                  h('span', { style: { flex: '0 0 90px' } }, t('colKind')),
-                  h('span', { style: { flex: '0 0 140px' } }, t('colTime')),
-                  h('span', { style: { flex: '0 0 48px' } }, t('colHits')),
-                  h('span', { style: { flex: '0 0 30px' } }, '')),
-                ...entries.map((entry) => {
+                  h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, t('colValue')),
+                  h('span', { style: { flex: '0 0 100px' } }, t('colCategory')),
+                  h('span', { style: { flex: '0 0 120px' } }, t('colKind')),
+                  h('span', { style: { flex: '0 0 110px' } }, '')),
+                ...visibleEntries.map((entry) => {
                   const revealed = Boolean(shown[entry.ph]);
-                  const value = revealed ? shown[entry.ph] : (entry.preview || entry.ph);
-                  return h('div', { key: entry.ph, style: boxStyle },
-                    h('span', { style: { flex: '1 1 46%', minWidth: 0, display: 'grid', gap: 2 } },
+                  const value = revealed ? shown[entry.ph] : (entry.name || entry.preview || entry.ph);
+                  const copyState = copied === entry.ph
+                    ? t('copyOk')
+                    : copied === `error:${entry.ph}` ? t('copyFail') : null;
+                  return h('div', { key: entry.ph, style: { ...boxStyle, alignItems: 'center' } },
+                    h('span', { style: { flex: '1 1 auto', minWidth: 0, display: 'grid', gap: 2 } },
                       h('span', {
                         style: {
                           ...monoStyle,
@@ -397,30 +929,51 @@ window.__ModuleLoader__.load({
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                         },
-                        title: revealed ? undefined : entry.ph,
+                        title: revealed ? shown[entry.ph] : (entry.name || entry.ph),
                       }, value),
-                      h('span', { style: { ...monoStyle, fontSize: 11, color: 'var(--dsw-alias-label-dimmed)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.ph)),
-                    h('span', { style: { flex: '0 0 90px', fontSize: 12, color: 'var(--dsw-alias-label-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.rule),
-                    h('span', { style: { flex: '0 0 140px', fontSize: 12, color: 'var(--dsw-alias-label-dimmed)' } }, formatTime(entry.createdAt)),
-                    h('span', { style: { flex: '0 0 48px', fontSize: 12, color: 'var(--dsw-alias-label-secondary)' } }, String(entry.hits)),
-                    h('button', {
-                      type: 'button',
-                      className: 'dsguard-btn',
-                      style: { ...btnStyle, opacity: restricted ? 0.45 : 1, cursor: restricted ? 'not-allowed' : 'pointer' },
-                      'aria-pressed': revealed,
-                      'aria-label': restricted ? t('restrictedUnlock') : t(revealed ? 'hide' : 'reveal'),
-                      title: restricted ? t('restrictedUnlock') : t(revealed ? 'hide' : 'reveal'),
-                      disabled: restricted,
-                      onClick: () => { if (!restricted) toggle(entry.ph); },
-                    }, h(LockGlyph, { open: revealed })));
+                      h('span', { style: { ...monoStyle, fontSize: 11, color: 'var(--dsw-alias-label-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, entry.ph)),
+                    h('span', { style: { flex: '0 0 100px', fontSize: 12, color: 'var(--dsw-alias-label-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, title: entry.label || '' }, entry.label || '—'),
+                    h('span', { style: { flex: '0 0 120px', fontSize: 12, color: 'var(--dsw-alias-label-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }, title: entry.rule || '' }, entry.rule),
+                    h('div', { style: { flex: '0 0 110px', display: 'flex', gap: 6, justifyContent: 'flex-end' } },
+                      h('button', {
+                        type: 'button', className: 'dsguard-btn',
+                        style: { ...btnStyle, opacity: restricted ? 0.45 : 1, cursor: restricted ? 'not-allowed' : 'pointer' },
+                        'aria-pressed': revealed,
+                        'aria-label': restricted ? t('restrictedUnlock') : t(revealed ? 'hide' : 'reveal'),
+                        title: restricted ? t('restrictedUnlock') : t(revealed ? 'hide' : 'reveal'),
+                        disabled: restricted,
+                        onClick: () => { if (!restricted) toggle(entry.ph); },
+                      }, h(LockGlyph, { open: revealed })),
+                      h('button', {
+                        type: 'button', className: 'dsguard-btn',
+                        style: { ...btnStyle, width: copyState ? 'auto' : 30, padding: copyState ? '0 8px' : 0, fontSize: 11, opacity: restricted ? 0.45 : 1, cursor: restricted ? 'not-allowed' : 'pointer' },
+                        'aria-label': t('copyPlain'), title: t('copyPlain'),
+                        disabled: restricted,
+                        onClick: () => { if (!restricted) copyPlaintext(entry.ph); },
+                      }, copyState || h(CopyGlyph)),
+                      entry.pinned
+                        ? h('button', {
+                          type: 'button', className: 'dsguard-btn',
+                          style: { ...btnStyle, width: 'auto', padding: '0 8px', fontSize: 11, opacity: restricted ? 0.45 : 1 },
+                          title: t('entryDelete'), disabled: restricted,
+                          onClick: () => deleteEntry(entry.ph),
+                        }, t('entryDelete'))
+                        : null));
                 }),
                 revealedAny(shown)
                   ? h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-state-warn-label)', margin: 0 } }, t('autoHide'))
                   : null),
-        h('p', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-dimmed)', margin: 0 } }, `${t('placeholder')} · ${t('usage')}`),
-        h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-label-dimmed)', margin: 0 } }, `inline reveal: ${inlineState}`),
+        h('p', { style: { fontSize: 11, lineHeight: 1.6, color: 'var(--dsw-alias-label-secondary)', margin: 0 } }, `${t('placeholder')} · ${t('usage')}`),
+        h('p', { style: { fontSize: 11, color: 'var(--dsw-alias-label-secondary)', margin: 0 } }, `inline reveal: ${inlineState}`),
         data && data.lastError
           ? h('p', { style: { fontSize: 11, color: 'var(--dsh-alias-state-error-primary, var(--dsw-alias-state-error-primary))', margin: 0 } }, `lastError: ${data.lastError}`)
+          : null),
+        confirmDisable
+          ? h(DisableConfirm, {
+            t,
+            onCancel: () => setConfirmDisable(false),
+            onConfirm: () => applyPause({ action: 'disable' }),
+          })
           : null);
     }
 
@@ -670,12 +1223,6 @@ window.__ModuleLoader__.load({
         inlineState = 'no-service';
         console.warn('[sensitive-guard] cannot wait for uiConversation:', error && error.message);
       }
-    }
-
-    function formatTime(iso) {
-      const d = new Date(iso);
-      if (Number.isNaN(d.getTime())) return '';
-      return d.toLocaleString(undefined, { hour12: false });
     }
 
     function apply(ctx) {

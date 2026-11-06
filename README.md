@@ -14,7 +14,7 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 | `tools/post-execute` | host 钩子 | 工具结果进上下文前脱敏 |
 | `llm/stream` | host 钩子 | 出网的流式文本兜底清洗 |
 | `sensitive_guard_status`、`sensitive_guard_export` | host 工具 | 查状态；把明文导出成 0600 临时文件 |
-| `/guard/vault`、`/guard/reveal`、`/guard/settings` | HTTP 路由 | 设置页取数、揭示明文、暂停开关 |
+| `/guard/vault`、`/guard/reveal`、`/guard/settings`、`/guard/rules`、`/guard/entries` | HTTP 路由 | 设置页取数、揭示明文、暂停/关闭保护、规则清单与开关、手动录入敏感数据 |
 | `settings.section` | 客户端 slot | 设置页里的「敏感保护」 |
 | `conversation.user.text.node` | 客户端 slot | 对话里的锁形胶囊 |
 
@@ -45,7 +45,7 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 ```json
 {
   "dependencies": {
-    "dsh-sensitive-guard": "0.4.0"
+    "dsh-sensitive-guard": "0.5.0"
   },
   "dsh": {
     "profile": {
@@ -79,7 +79,11 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 
 只有用户消息能点。AI 回复和工具结果走另一套节点渲染，宿主没留「包一层」的口子，要接就得整体替换助手的消息渲染，宿主升级会白屏，所以没做。那些位置到设置页看。
 
-**设置页。** 顶部是暂停开关，下面是保管库条目，每条都能点锁查看，揭示会记审计。暂停有三档：30 分钟、2 小时、到重启。连不上数据库、模型读不到密码的时候点一下就行，到期自动恢复。「到重启」不写盘，重启就恢复。
+**设置页**分两个标签。「敏感数据管理」是保管库：列表只留名称/值、分类、规则三列，手动录入的名称和自定义分类直接显示；点小锁可临时查看明文（单行显示、悬停看全文），旁边的「复制明文」按钮走本机接口取完整明文写到剪贴板——浏览器直连、记审计、**明文不进模型上下文**；录错了可以删。顶部「添加敏感数据」是弹窗，填名称、明文、类型（选「自定义分类…」可以自己起分类名），明文直接加密进保管库、**不写 `rules.json`**，以后这段值出现就自动遮。「自动检测规则」列出 242 条规则（221 条上游 + 21 条内置），能搜名称/关键词、按全部/已开/已关筛选、每页 20 条翻页（共 13 页）、逐条开关；默认「已开启优先」排序，14 条默认关的集中在最后两页。
+
+顶部状态条分两类操作。**限时暂停**三档：30 分钟、2 小时、到重启，到期自动恢复，「到重启」不写盘、重启就恢复；连不上数据库、模型读不到密码时优先用这个。
+
+**「关闭保护」是持久关闭**，跟暂停不同：点一下先弹确认框，确认后状态写进 `pause.json`，**重启也不会自动恢复**，只有再点「开启保护」才恢复。关闭期间所有脱敏停止，明文直接进入模型上下文与日志，状态条变红并常驻提示。`resume` 和限时暂停都不会误解除这个状态。
 
 **模型怎么用凭据。** 它拿不到明文。要连库或者调接口时让它导出：
 
@@ -106,6 +110,8 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 
 ## 认得出什么
 
+**系统规则库。** 内置 221 条来自 [gitleaks](https://github.com/gitleaks/gitleaks) 的厂商规则（1Password、Adobe、Adafruit、Age、AWS、GCP、Azure、Stripe、Slack 等，MIT 许可，见 `NOTICE`）。每条都带关键词预筛、正则和可选熵值阈值，命中后才会去跑正则，不会 221 条正则全量扫一遍。默认开 207 条高置信规则；10 条「近似转换」和 4 条宽松规则默认关，在「自动检测规则」标签里自己开。上游还有 1 条 `pkcs12-file` 是按文件名 `.p12`/`.pfx` 判定的，文本脱敏用不上，规则页里标为「不适用」。规则数据由 `scripts/build-gitleaks.mjs` 从上游 TOML 转换生成，升级时重跑即可。
+
 厂商前缀：`sk-`、`sk_`、`ghp_`、`glpat-`、`npm_`、`hf_`、`AKIA`、`ASIA`、`xox*-`、`AIza`、`whsec_`、`SG.`。PEM 私钥块、JWT、`Bearer` 令牌。
 
 赋值和环境变量：`password=`、`secret:`、`api_key:`、`SECRET_KEY=`、`DB_PASSWORD=`。
@@ -124,7 +130,7 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 
 **可选的熵值检测，默认关闭。** `rules.json` 里加 `"entropy": true` 才会开。它抓的是没有前缀的随机串，但只对 base64 或混合字符集有用（熵约 4.8 到 5.0 bits/char）。纯 hex 串的上限就是 4.0，永远够不到 4.5 的默认阈值，所以 `8f3a9b2c…` 这种开了也抓不到；把阈值降到 3.9 又会误伤英文长句。另外 base64 图片、commit hash、UUID 都会被判成高熵。
 
-剩下的边界：自研格式的凭据得自己往 `extraRules` 加正则；二进制和图片里的、被 base64 或 hex 二次编码搬运过的、JSON 里值写成数字而不是字符串的，仍然抓不到。
+剩下的边界：自研格式的凭据可以用设置页「添加敏感数据」按字面量记住（明文加密进保管库），或往 `extraRules` 加正则；二进制和图片里的、被 base64 或 hex 二次编码搬运过的、JSON 里值写成数字而不是字符串的，仍然抓不到。
 
 ## 配置
 
@@ -136,6 +142,7 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
     { "id": "my-internal", "pattern": "X-WX-Token:\\s*([A-Za-z0-9]{20,})", "flags": "i", "group": 1 }
   ],
   "disabled": ["jwt"],
+  "enabledRules": [],
   "outboundScrub": true,
   "entropy": false,
   "entropyThreshold": 4.5,
@@ -145,7 +152,7 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 
 `group` 是要遮挡的捕获组序号，0 表示整个匹配。自定义正则的性能自己负责，别写 `(a+)+`、`(.*)*` 这类结构，它跑在同步钩子里，回溯爆炸会卡住宿主。
 
-`disabled` 里写规则 id 可以关掉单条内置规则。`outboundScrub: false` 会关掉出网补洗。
+`disabled` 里写规则 id 可以关掉单条默认开的规则；`enabledRules` 里写 id 可以打开一条默认关的规则。设置页的开关就是维护这两个列表，不用手改文件。`outboundScrub: false` 会关掉出网补洗。
 
 `allowCidrs` 默认是空数组，意思是只认本机。它管的是 HTTP 接口，下一节细说。
 
@@ -173,14 +180,17 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 
 ## HTTP 接口
 
-四个接口，默认只接受本机回环。
+五个路由，默认只接受本机回环。
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
 | GET | `/guard/vault` | 面板数据，含 8 位预览和 `access` 当前级别；未授权来源返回 `restricted: true` 的只读版，不含预览和审计 |
 | POST | `/guard/reveal` | `{placeholder}` 换 `{plaintext, body, prefix}`；未授权 403 |
-| GET | `/guard/settings` | `{paused, untilRestart, until, remainingMs}`；未授权 403 |
-| POST | `/guard/settings` | `{action:"pause", minutes:30}`、`{action:"pause", untilRestart:true}`、`{action:"resume"}`；未授权 403 |
+| GET | `/guard/settings` | `{off, paused, untilRestart, until, remainingMs}`；`off` 为持久关闭时 `remainingMs` 为 `null`；未授权 403 |
+| POST | `/guard/settings` | `{action:"pause", minutes:30}`、`{action:"pause", untilRestart:true}`、`{action:"resume"}` 清限时暂停；`{action:"disable"}` 持久关闭（写盘、重启不恢复）、`{action:"enable"}` 才重新开启；未授权 403 |
+| GET | `/guard/rules` | 规则清单（名称、来源、检测器标签、分级、当前开关）、总数、跳过项；未授权 403 |
+| POST | `/guard/rules` | `{id, enabled}` 切换单条规则；写 `disabled` / `enabledRules`；未授权 403 |
+| POST | `/guard/entries` | `{action:"add", name, plaintext, kind}` 手动录入，或 `{action:"delete", placeholder}` 删除；明文只进加密保管库；未授权 403 |
 
 ## 已知限制
 
@@ -196,6 +206,8 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 10. 未授权来源仍然能读到元数据：有哪些条目、什么规则、什么时候入库、命中几次。这是为了让设置页能自我解释，代价是同网段的人能推断出「这里有 12 条凭据、分别是钥匙密码令牌」，但拿不到值。
 11. 宿主是 fail-fast 的，客户端 entry 在模块顶层抛错会让整个应用起不来。`apply` 已经整体兜底，顶层风险消不掉。
 12. 0.3.4 及更早的占位符是 `sha256(明文)` 前缀，短密码可以离线反推。升级后新捕获一律用 HMAC，旧代号为了兼容仍留在 `vault.json` 的 `aliases` 里，所以旧会话照样点得开；但**已经写进历史会话日志的旧代号改不了**，那批短密码该轮换还得轮换。
+13. 系统规则来自 gitleaks：10 条含 Go 专有 `(?-i:…)` 作用域标志的规则转成 JS 后会略微变宽松，标为「近似转换」并默认关；`pkcs12-file` 按文件名判定，文本脱敏用不上，未接入。规则数据按 MIT 许可随包分发，声明在 `NOTICE`。
+14. 手动录入的条目固定在保管库里（`pinned`），不参与 500 条上限淘汰。明文只在加密的 `vault.json`，运行时解密到内存做字面量匹配，**不写 `rules.json`**；但仍然防不住已经拿到本机账户权限的人。
 
 ## 卸载和故障
 
@@ -211,20 +223,24 @@ taskkill /F /IM "DeepSeek Harness.exe"
 
 `inline reveal:` 那行的取值：`ok` 正常，`waiting` 还在等 `uiConversation` 服务，`no-service` 拿不到服务，`matcher-failed` 规则注册被拒，`renderer-failed` 渲染器注册被拒。
 
-数据目录在 `$DSH_PROFILE_DIR/sensitive-guard/`，包含 `vault.json`、`vault.key`、`pause.json`、`rules.json`、`exports/`。没设这个变量时回落到 `$DSH_HOME` 下。
+数据目录在 `$DSH_PROFILE_DIR/sensitive-guard/`，包含 `vault.json`、`vault.key`、`pause.json`（`until` 限时暂停 + `off` 持久关闭）、`rules.json`、`exports/`。没设这个变量时回落到 `$DSH_HOME` 下。
 
 ## 开发
 
 ```bash
-node test.mjs
+node test.mjs                                  # 离线自测
+node scripts/build-gitleaks.mjs                # 从上游重新生成规则数据
+node scripts/build-gitleaks.mjs ./gitleaks.toml
 ```
 
-90 项离线自测，用临时目录，不碰真实保管库。里面有一次真实的「从 0.3.x 升级」演练：把一条保管库记录改回旧代号，再用新进程加载，验证新旧代号都能解锁。
+137 项离线自测，用临时目录，不碰真实保管库。包含 0.3.x 旧代号升级演练、两个设置页标签与添加弹窗（含自定义分类）、列表行与复制按钮、关闭保护确认弹窗的渲染冒烟测试、221 条规则的编译与分级校验、逐条熵值/开关/手动录入回归，以及一次用新进程模拟重启验证持久关闭仍然生效。
 
 | 文件 | 作用 |
 | --- | --- |
-| `index.js` | host 端：三条钩子、保管库、两个工具、三条路由 |
-| `client.js` | 客户端：设置页、对话内胶囊、暂停开关 |
+| `index.js` | host 端：三条钩子、保管库、两个工具、五条路由 |
+| `client.js` | 客户端：两个设置页标签、规则页（搜索/筛选/分页/开关）、添加敏感数据弹窗（含自定义分类）、对话内胶囊 |
+| `rules/gitleaks.json` | 从 gitleaks TOML 转换来的 221 条规则（MIT，见 `NOTICE`） |
+| `scripts/build-gitleaks.mjs` | 规则转换脚本，负责 Go/RE2 → JS 语法降级与分级 |
 | `test.mjs` | 自测 |
 | `CHANGELOG.md` | 变更记录 |
 | `locale/` | 插件市场用的中英元数据 |
