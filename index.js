@@ -996,9 +996,9 @@ const STATUS_OUTPUT = {
         type: 'object',
         additionalProperties: false,
         properties: {
-          ph: { type: 'string', description: '上下文占位符' },
-          rule: { type: 'string', description: '命中的规则 id' },
-          origin: { type: 'string', description: '首次捕获来源' },
+          ph: { type: 'string', description: 'Context placeholder' },
+          rule: { type: 'string', description: 'Rule id that matched' },
+          origin: { type: 'string', description: 'Where it was first captured' },
           createdAt: { type: 'string' },
           lastHitAt: { type: 'string' },
           hits: { type: 'number' },
@@ -1018,7 +1018,7 @@ const EXPORT_OUTPUT = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    path: { type: 'string', description: '明文文件路径（0600）' },
+    path: { type: 'string', description: 'Path of the plaintext file (0600)' },
     note: { type: 'string' },
   },
   required: ['path', 'note'],
@@ -1067,7 +1067,7 @@ function snapshot(view) {
 function registerTools(ctx) {
   ctx.effect(() => ctx.tools.register({
     name: 'sensitive_guard_status',
-    description: '查看「敏感保护」的运行状态：保管库条目的元数据（占位符、命中规则、来源、时间、命中次数）、计数统计与错误。返回值不含任何明文字符，也不含明文片段。',
+    description: 'Show the runtime status of Sensitive guard: metadata for every vault entry (placeholder, rule that matched, capture origin, timestamps, hit count), counters and errors. The result contains no plaintext characters and no plaintext fragments.',
     parameters: {},
     output: {
       schema: STATUS_OUTPUT,
@@ -1091,12 +1091,12 @@ function registerTools(ctx) {
 
   ctx.effect(() => ctx.tools.register({
     name: 'sensitive_guard_export',
-    description: '把一条被遮挡的敏感数据（<SG_ 占位符）导出为本机 0600 权限的明文文件，供命令执行时引用（如 --password "$(cat <path>)"、source <path>）。明文只写入该文件，不会进入会话上下文。仅在确实需要用凭据执行操作时调用；每次导出都会记入审计。',
+    description: 'Export one masked secret (an <SG_ placeholder) to a plaintext file with 0600 permissions on this machine, for use from a command (e.g. --password "$(cat <path>)", source <path>). The plaintext is written only to that file and never enters the session context. Call this only when a credential is genuinely needed to run something; every export is audited.',
     parameters: {
       type: 'object',
       additionalProperties: false,
       properties: {
-        placeholder: { type: 'string', description: '保管库占位符，形如 <SG_012345abcdef>' },
+        placeholder: { type: 'string', description: 'Vault placeholder, such as <SG_012345abcdef>' },
       },
       required: ['placeholder'],
     },

@@ -218,7 +218,7 @@ node scripts/build-gitleaks.mjs      # regenerate rule data from upstream
 node scripts/build-gitleaks.mjs ./gitleaks.toml
 ```
 
-137 offline tests using a temporary directory, never touching the real vault: the 0.3.x code-upgrade drill, both Settings tabs and the add dialog (including custom categories), list rows and the copy button, render smoke tests for the disable-confirmation dialog, compilation and tiering of all 221 rules, per-rule entropy/switch/manual-entry regressions, and a fresh-process restart proving persistent disable really survives.
+139 offline tests using a temporary directory, never touching the real vault: the 0.3.x code-upgrade drill, both Settings tabs and the add dialog (including custom categories), list rows and the copy button, render smoke tests for the disable-confirmation dialog, compilation and tiering of all 221 rules, per-rule entropy/switch/manual-entry regressions, and a fresh-process restart proving persistent disable really survives.
 
 | File | Role |
 | --- | --- |

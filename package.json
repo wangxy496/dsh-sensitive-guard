@@ -1,6 +1,6 @@
 {
   "name": "dsh-sensitive-guard",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "敏感信息脱敏 DSH 插件：密钥、令牌、密码、API Key 在进入模型上下文前替换为 <SG_> 占位符，内置 221 条 gitleaks 规则与 .env/JSON 字段识别；明文 AES-256-GCM 加密存本机保管库，点小锁看真值，可导出给命令用。",
   "license": "MIT",
   "icon": "icon.svg",

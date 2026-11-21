@@ -1037,7 +1037,17 @@ window.__ModuleLoader__.load({
      * re-masks on its own. The plaintext never enters model context: this is a
      * browser fetch, not a tool result.
      */
-    function RevealChip({ ph, interactive }) {
+    /**
+     * Chip labels come from the host dictionary when it is available. The built-in
+     * Chinese stays as the fallback: a host without a locale service must not cost
+     * users the in-conversation lock (see registerInlineReveal).
+     */
+    const chipLabel = (t, revealed) =>
+      typeof t === 'function'
+        ? t(revealed ? 'hide' : 'reveal')
+        : revealed ? '隐藏明文' : '显示明文';
+
+    function RevealChip({ ph, interactive, t }) {
       const [value, setValue] = useState(null);
       const [busy, setBusy] = useState(false);
       const [tone, setTone] = useState(() => {
@@ -1131,8 +1141,8 @@ window.__ModuleLoader__.load({
               cursor: 'pointer',
             },
             'aria-pressed': value !== null,
-            'aria-label': value !== null ? '隐藏明文' : '显示明文',
-            title: value !== null ? '隐藏明文' : '显示明文',
+            'aria-label': chipLabel(t, value !== null),
+            title: chipLabel(t, value !== null),
             disabled: busy,
             onClick: toggle,
           }, h(LockGlyph, { open: value !== null })));
@@ -1143,7 +1153,7 @@ window.__ModuleLoader__.load({
      * best-effort: a missing service or a changed slot contract must degrade to
      * "placeholder shown as plain text", never break the message list.
      */
-    function registerInlineReveal(ctx, slots) {
+    function registerInlineReveal(ctx, slots, t) {
       const install = (conv) => {
         if (!conv || !conv.userText || typeof conv.userText.register !== 'function') {
           inlineState = 'no-service';
@@ -1186,6 +1196,7 @@ window.__ModuleLoader__.load({
               }, (props) => h(RevealChip, {
                 ph: props && props.node && props.node.data ? props.node.data.ph : '',
                 interactive: props ? props.interactive : true,
+                t,
               }));
               inlineState = 'ok';
             } catch (error) {
@@ -1238,18 +1249,26 @@ window.__ModuleLoader__.load({
     function applyEntry(ctx) {
       const slots = ctx && ctx.slots;
       if (!slots || typeof slots.inject !== 'function' || typeof slots.register !== 'function') return;
-      // Inline reveal only needs slots, so register it before the settings page —
-      // a missing locale service must not cost users the in-conversation lock.
-      registerInlineReveal(ctx, slots);
+      // The dictionary goes first because the lock chip takes its accessible label
+      // from it. It stays optional: without a locale service the chip falls back to
+      // the built-in Chinese labels and only the settings page is skipped, so a
+      // missing service never costs users the in-conversation lock.
       const locale = ctx && ctx.locale;
-      if (!locale) return;
-      if (typeof locale.register !== 'function' || typeof locale.bind !== 'function') return;
-      try {
-        ctx.effect(() => locale.register(NS, { zh, en }), 'sensitive-guard: dictionaries');
-      } catch (error) {
-        console.warn('[sensitive-guard] dictionary registration failed:', error && error.message);
+      let t = null;
+      if (locale && typeof locale.register === 'function' && typeof locale.bind === 'function') {
+        try {
+          ctx.effect(() => locale.register(NS, { zh, en }), 'sensitive-guard: dictionaries');
+        } catch (error) {
+          console.warn('[sensitive-guard] dictionary registration failed:', error && error.message);
+        }
+        try {
+          t = locale.bind(NS);
+        } catch (error) {
+          console.warn('[sensitive-guard] dictionary bind failed:', error && error.message);
+        }
       }
-      const t = locale.bind(NS);
+      registerInlineReveal(ctx, slots, t);
+      if (typeof t !== 'function') return;
       slots.inject('settings.section', () => {
         try {
           return slots.register({
