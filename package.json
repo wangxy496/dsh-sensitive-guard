@@ -45,7 +45,7 @@
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "README.en.md", "CHANGELOG.md", "LICENSE", "NOTICE", "test.mjs", "rules/*.json", "scripts/build-gitleaks.mjs"],
+  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "assets/*.png", "screenshots.json", "README.md", "README.en.md", "CHANGELOG.md", "LICENSE", "NOTICE", "test.mjs", "rules/*.json", "scripts/build-gitleaks.mjs"],
   "scripts": {
     "test": "node test.mjs"
   },
