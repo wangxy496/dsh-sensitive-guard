@@ -1,46 +1,50 @@
 # dsh-sensitive-guard
 
-DeepSeek Harness（DSH）的插件，只做一件事：把密钥、令牌、密码挡在模型上下文之外。用户消息和工具结果里的凭证，在进入上下文之前就被换成 `<SG_xxxxxxxxxxxx>` 占位符，明文加密留在本机。模型拿到的是代号，你点一下能看到真值。
+**把密钥挡在模型上下文之外。** 你贴进对话的 API Key、agent 读到的 `.env`、工具返回的 `config.json` 里的密码，在进入模型上下文之前就被换成 `<SG_1e62c5fe7944>` 这样的占位符。明文用 AES-256-GCM 加密留在本机，点一下小锁才看得见——模型拿到的永远只是代号。
 
-代号里那 12 位十六进制是 `HMAC-SHA256(vault.key, 明文)` 的前缀。密钥只在本机，所以拿到代号的人没法靠穷举短密码反推；同一个密钥每次仍然得到同一个代号。0.3.4 及更早用的是 `sha256(明文)` 前缀，短密码可以离线猜出来，升级后旧代号仍保留可解锁，新捕获一律换成新算法。
+[![npm version](https://img.shields.io/npm/v/dsh-sensitive-guard?color=3d8f66)](https://www.npmjs.com/package/dsh-sensitive-guard)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-sensitive-guard?color=3d8f66)](https://www.npmjs.com/package/dsh-sensitive-guard)
+[![GitHub stars](https://img.shields.io/github/stars/wangxy496/dsh-sensitive-guard?color=3d8f66)](https://github.com/wangxy496/dsh-sensitive-guard/stargazers)
+[![license](https://img.shields.io/npm/l/dsh-sensitive-guard?color=3d8f66)](./LICENSE)
+[![dsh](https://img.shields.io/badge/dsh-%E2%89%A50.2.0-3d8f66)](https://github.com/deepseek-ai/deepseek-harness)
 
-## 它往宿主里注册了什么
+中文 · [English](README.en.md)
 
-DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端抓数据、管保管库、开接口；客户端加设置页和对话里的胶囊。
+<img src="https://cdn.jsdelivr.net/gh/wangxy496/dsh-sensitive-guard@main/docs/chat-masked.png" width="640" alt="对话里被遮住的凭证：sk- 后面跟一个锁形胶囊">
 
-| 注册点 | 端 | 作用 |
-| --- | --- | --- |
-| `agent/pre-step` | host 钩子 | 用户输入进上下文前脱敏 |
-| `tools/post-execute` | host 钩子 | 工具结果进上下文前脱敏 |
-| `llm/stream` | host 钩子 | 出网的流式文本兜底清洗 |
-| `sensitive_guard_status`、`sensitive_guard_export` | host 工具 | 查状态；把明文导出成 0600 临时文件 |
-| `/guard/vault`、`/guard/reveal`、`/guard/settings`、`/guard/rules`、`/guard/entries` | HTTP 路由 | 设置页取数、揭示明文、暂停/关闭保护、规则清单与开关、手动录入敏感数据 |
-| `settings.section` | 客户端 slot | 设置页里的「敏感保护」 |
-| `conversation.user.text.node` | 客户端 slot | 对话里的锁形胶囊 |
+*输入 `sk-proj-…` 就变成这样；点开锁看明文，20 秒后自动遮回。*
 
-前提只要 `tools` 一个。`webServer` 不存在时脱敏照常工作，只是设置页和揭示用不了。
+## 为什么需要它
 
-## 长什么样
+一段对话里只要贴过一次 `.env`、让 agent `cat config.json`，密钥就永久留在了**会话日志、模型上下文，以及你随手分享的截图**里。
 
-遮住的时候，对话里是 `sk-` 后面跟一个锁：
+| | 模型上下文 | 落盘的会话日志 | 你的屏幕 |
+| --- | --- | --- | --- |
+| 不用它 | `sk-proj-abcdef…` 完整明文 | 完整明文 | 完整明文 |
+| 用它 | `<SG_1e62c5fe7944>` | `v1:iv:tag:密文`（AES-256-GCM） | 锁，点开才向本机要明文 |
 
-![对话里被遮住的凭证](https://raw.githubusercontent.com/wangxy496/dsh-sensitive-guard/main/docs/chat-masked.png)
-
-点一下锁，就地显示明文，20 秒后自动遮回：
-
-![点开后显示明文](https://raw.githubusercontent.com/wangxy496/dsh-sensitive-guard/main/docs/chat-revealed.png)
-
-设置页列出保管库里全部条目，行尾的锁同样能揭示：
-
-![设置页](https://raw.githubusercontent.com/wangxy496/dsh-sensitive-guard/main/docs/settings.png)
+它不做出口改写、不做沙箱、也不替代密钥轮换。它只保证一件事：**密钥不会因为你的一次复制粘贴，变成模型上下文里的一段可读文本。**
 
 ## 安装
 
-要求 dsh 0.2.0 以上、Node 18 以上。Windows 11 和 Ubuntu 22.04 都实测过，macOS 没测。
+```bash
+dsh plugin add dsh-sensitive-guard
+```
 
-三种装法，按场景选。
+要求 dsh 0.2.0 以上、Node 18 以上。Windows 11 和 Ubuntu 22.04 实测过，macOS 没测。
 
-**从 npm 装**（给使用者）。编辑 `~/.dsh/profiles/<profile>/package.json`：
+装完在设置页会多出「敏感保护」一节。发一句：
+
+```
+我的 api key 是 sk-proj-abcdefghijklmnopqrstuvwx
+```
+
+应该显示成 `我的 api key 是 sk-` 加一个锁形胶囊。点开能看到明文，20 秒后自动遮回。再看「设置 → 敏感保护」，最下面一行 `inline reveal:` 显示 `ok` 就正常，显示别的就翻到文末「卸载和故障」。
+
+<details>
+<summary>不用 CLI：手改 package.json</summary>
+
+编辑 `~/.dsh/profiles/<profile>/package.json`：
 
 ```json
 {
@@ -57,21 +61,24 @@ DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端�
 
 `bundles` 里保留原有条目，只追加这一项。然后在同目录跑 `pnpm install`，重启 dsh。
 
-**让 dsh 自己装**（不想手改文件的场合）。在会话里说「安装这个目录下的插件：/绝对/路径」，它走 `install_bundle`。
+</details>
 
-**本地改代码用 link**。把版本号换成 `"link:/absolute/path/to/sensitive-guard"`，源码改动立刻生效，但 host 端的改动还是要重启进程。
+<details>
+<summary>本地改代码：link 模式</summary>
 
-## 确认装好了
+把版本号换成 `"link:/absolute/path/to/sensitive-guard"`，源码改动立刻生效，但 host 端的改动还是要重启进程。
 
-发一句：
+</details>
 
-```
-我的 api key 是 sk-proj-abcdefghijklmnopqrstuvwx
-```
+## 长什么样
 
-应该显示成 `我的 api key 是 sk-` 加一个锁形胶囊。点开能看到明文，20 秒后自动遮回。
+点一下锁，就地显示明文，20 秒后自动遮回：
 
-再看「设置 → 敏感保护」，最下面一行 `inline reveal:` 显示 `ok` 就正常，显示别的就翻到文末「卸载和故障」。
+<img src="https://cdn.jsdelivr.net/gh/wangxy496/dsh-sensitive-guard@main/docs/chat-revealed.png" width="640" alt="点开后显示明文">
+
+设置页列出保管库里全部条目，行尾的锁同样能揭示；旁边的「复制明文」直接把值写进剪贴板（走本机接口，明文不进模型上下文）：
+
+<img src="https://cdn.jsdelivr.net/gh/wangxy496/dsh-sensitive-guard@main/docs/settings.png" width="720" alt="设置页">
 
 ## 日常怎么用
 
@@ -95,6 +102,26 @@ sensitive_guard_export(<SG_xxx>)   明文写到 0600 文件，返回路径
 工具只有两个。`sensitive_guard_status` 看状态和条目元数据，不含明文，连前 8 位预览都不返回。`sensitive_guard_export` 负责导出，文件 15 分钟后过期。
 
 常被当成 bug 的一点：模型读 `application.yml` 时看到的是占位符，拿它去连库必然失败。要么让它先导出，要么临时点个暂停。
+
+## 工作原理
+
+代号里那 12 位十六进制是 `HMAC-SHA256(vault.key, 明文)` 的前缀。密钥只在本机，所以拿到代号的人没法靠穷举短密码反推；同一个密钥每次仍然得到同一个代号。0.3.4 及更早用的是 `sha256(明文)` 前缀，短密码可以离线猜出来，升级后旧代号仍保留可解锁，新捕获一律换成新算法。
+
+### 它往宿主里注册了什么
+
+DSH 插件分 host 端和客户端两半，这个插件两半都占：host 端抓数据、管保管库、开接口；客户端加设置页和对话里的胶囊。
+
+| 注册点 | 端 | 作用 |
+| --- | --- | --- |
+| `agent/pre-step` | host 钩子 | 用户输入进上下文前脱敏 |
+| `tools/post-execute` | host 钩子 | 工具结果进上下文前脱敏 |
+| `llm/stream` | host 钩子 | 出网的流式文本兜底清洗 |
+| `sensitive_guard_status`、`sensitive_guard_export` | host 工具 | 查状态；把明文导出成 0600 临时文件 |
+| `/guard/vault`、`/guard/reveal`、`/guard/settings`、`/guard/rules`、`/guard/entries` | HTTP 路由 | 设置页取数、揭示明文、暂停/关闭保护、规则清单与开关、手动录入敏感数据 |
+| `settings.section` | 客户端 slot | 设置页里的「敏感保护」 |
+| `conversation.user.text.node` | 客户端 slot | 对话里的锁形胶囊 |
+
+前提只要 `tools` 一个。`webServer` 不存在时脱敏照常工作，只是设置页和揭示用不了。
 
 ## 数据在哪
 
@@ -246,3 +273,9 @@ node scripts/build-gitleaks.mjs ./gitleaks.toml
 | `locale/` | 插件市场用的中英元数据 |
 
 GitHub Actions 在 ubuntu 和 windows 上跑 node 18、20、22 三个版本。许可证 MIT。
+
+---
+
+如果它帮你挡掉过一次不该进上下文的密钥，给个 star 是最直接的帮助：[⭐ star](https://github.com/wangxy496/dsh-sensitive-guard/stargazers)
+
+遇到不认的凭据格式，[提个 issue](https://github.com/wangxy496/dsh-sensitive-guard/issues)，带上脱敏后的样例，规则可以按厂商补。

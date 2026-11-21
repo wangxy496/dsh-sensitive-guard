@@ -1,8 +1,9 @@
 {
   "name": "dsh-sensitive-guard",
   "version": "0.5.0",
-  "description": "敏感保护：进入模型上下文前把密钥/令牌/密码替换为 <SG_> 占位符，内置 221 条 gitleaks 检测规则与结构化字段判定；明文加密存本地保管库，设置页与对话内提供小锁点击还原，工具可将明文导出为 0600 文件供命令执行时使用。",
+  "description": "敏感信息脱敏 DSH 插件：密钥、令牌、密码、API Key 在进入模型上下文前替换为 <SG_> 占位符，内置 221 条 gitleaks 规则与 .env/JSON 字段识别；明文 AES-256-GCM 加密存本机保管库，点小锁看真值，可导出给命令用。",
   "license": "MIT",
+  "icon": "icon.svg",
   "author": "wangxinyu",
   "repository": {
     "type": "git",
@@ -12,7 +13,26 @@
     "url": "https://github.com/wangxy496/dsh-sensitive-guard/issues"
   },
   "homepage": "https://github.com/wangxy496/dsh-sensitive-guard#readme",
-  "keywords": ["dsh", "dsh-plugin", "sensitive", "mask", "vault", "secret", "redact"],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "sensitive",
+    "secret",
+    "secrets",
+    "credential",
+    "api-key",
+    "password",
+    "token",
+    "redact",
+    "redaction",
+    "mask",
+    "vault",
+    "encrypt",
+    "security",
+    "privacy",
+    "gitleaks"
+  ],
   "private": false,
   "type": "module",
   "engines": {
@@ -25,7 +45,7 @@
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "CHANGELOG.md", "LICENSE", "NOTICE", "test.mjs", "rules/*.json", "scripts/build-gitleaks.mjs"],
+  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "README.en.md", "CHANGELOG.md", "LICENSE", "NOTICE", "test.mjs", "rules/*.json", "scripts/build-gitleaks.mjs"],
   "scripts": {
     "test": "node test.mjs"
   },
