@@ -1,5 +1,15 @@
 # 变更记录
 
+## 0.5.1
+
+无代码变更，只改文档与包元数据。
+
+- README 首屏重排成 landing page：一句话钩子 → badges → 主截图 → 「不用它 / 用它」对比表 → 一行 `dsh plugin add` 安装命令。HMAC 原理与「往宿主注册了什么」下移到「工作原理」。
+- 三张截图从 `raw.githubusercontent.com` 换到 jsdelivr CDN——raw 在国内经常裂图，而主要用户是中文用户。
+- 新增英文版 `README.en.md`，README 顶部加中英切换。
+- 新增 `screenshots.json`（3 张截图按顺序声明）与 `assets/icon-180.png`（180×180 位图）。插件市场的卡片图标只收位图，详情页截图优先读仓库里的 `screenshots.json` 而不是从 README 抽取。
+- `package.json`：`description` 精简到 130 字符，`keywords` 7 → 18 项（补 `api-key` / `credential` / `secrets` / `password` / `token` / `gitleaks` 等），补 `icon` 字段。
+
 ## 0.5.0
 
 - 接入 [gitleaks](https://github.com/gitleaks/gitleaks) 官方规则库：从 `config/gitleaks.toml`（222 条，MIT）转换成 **221 条** JS 可用正则，随包发布 `rules/gitleaks.json` 与 `NOTICE`；`pkcs12-file` 是按文件名判定的，跳过并在规则页标注「不适用」。

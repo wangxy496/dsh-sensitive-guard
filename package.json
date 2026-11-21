@@ -1,6 +1,6 @@
 {
   "name": "dsh-sensitive-guard",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "敏感信息脱敏 DSH 插件：密钥、令牌、密码、API Key 在进入模型上下文前替换为 <SG_> 占位符，内置 221 条 gitleaks 规则与 .env/JSON 字段识别；明文 AES-256-GCM 加密存本机保管库，点小锁看真值，可导出给命令用。",
   "license": "MIT",
   "icon": "icon.svg",
@@ -45,16 +45,36 @@
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "assets/*.png", "screenshots.json", "README.md", "README.en.md", "CHANGELOG.md", "LICENSE", "NOTICE", "test.mjs", "rules/*.json", "scripts/build-gitleaks.mjs"],
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "assets/*.png",
+    "screenshots.json",
+    "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE",
+    "test.mjs",
+    "rules/*.json",
+    "scripts/build-gitleaks.mjs"
+  ],
   "scripts": {
     "test": "node test.mjs"
   },
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "immediately": true,
-      "inject": ["@deepseek-ai/dsh-client-ui-sidebar"]
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
     }
   }
 }
