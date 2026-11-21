@@ -280,6 +280,69 @@ api.apply(fullCtx);
 check('inline renderer uses keyed registration', registered.some((r) => r.key === 'sensitive-guard'));
 
 /**
+ * The in-conversation chip takes its accessible label from the host dictionary,
+ * with the built-in Chinese as fallback. Both branches are load-bearing: without
+ * the fallback a host that provides no locale service loses the label entirely,
+ * and without the dictionary an English host gets a Chinese tooltip and screen
+ * reader announcement.
+ */
+function renderInlineChip(translate, revealed) {
+  let stateIndex = 0;
+  const ReactStub = {
+    createElement: (type, props, ...children) => (
+      typeof type === 'function' ? type({ ...(props || {}), children }) : { type, props, children }
+    ),
+    Fragment: 'Fragment',
+    useState: (initial) => {
+      stateIndex += 1;
+      if (stateIndex === 1) return [revealed ? 'plain-value' : null, () => {}];
+      return [typeof initial === 'function' ? initial() : initial, () => {}];
+    },
+    useEffect: () => {},
+    useRef: () => ({ current: 0 }),
+    useCallback: (fn) => fn,
+  };
+  let chipApi = null;
+  const win = { __ModuleLoader__: { load(def) { chipApi = def.factory((n) => (n === 'react' ? ReactStub : {})); } } };
+  const capturedChip = [];
+  const chipSlots = {
+    inject(_name, factory) {
+      const it = factory();
+      if (it && typeof it.next === 'function') { let s = it.next(); while (!s.done) s = it.next(); }
+    },
+    register(options, renderer) { capturedChip.push({ options, renderer }); return () => {}; },
+  };
+  const conv = { uiConversation: { userText: { register: () => {} } } };
+  const ctx = new Proxy({
+    slots: chipSlots,
+    effect: () => () => {},
+    locale: { register: () => () => {}, bind: () => translate },
+    get: (name) => conv[name],
+    inject: (_deps, cb) => cb(conv),
+  }, { get(t, p) { return p in t ? t[p] : undefined; } });
+  new Function('window', 'globalThis', clientSrc).call(globalThis, win, globalThis);
+  chipApi.apply(ctx);
+  const node = capturedChip.find((c) => c.options && c.options.name === 'conversation.user.text.node');
+  if (!node) return null;
+  const tree = node.renderer({ node: { data: { ph: '<SG_aaaaaaaaaaaa>' } }, interactive: true });
+  const findButton = (n) => {
+    if (!n || typeof n !== 'object') return null;
+    if (n.type === 'button') return n;
+    for (const kid of n.children || []) { const hit = findButton(kid); if (hit) return hit; }
+    return null;
+  };
+  return findButton(tree);
+}
+
+const chipEn = renderInlineChip((k) => ({ reveal: 'Show secret', hide: 'Hide secret' }[k] || k), false);
+check('胶囊 aria-label 取字典（英文宿主）',
+  chipEn && chipEn.props['aria-label'] === 'Show secret', chipEn && chipEn.props['aria-label']);
+
+const chipZh = renderInlineChip(null, false);
+check('无字典服务时胶囊回退中文标签',
+  chipZh && chipZh.props['aria-label'] === '显示明文', chipZh && chipZh.props['aria-label']);
+
+/**
  * Render both tabs through a React stub that actually calls function
  * components. Catches runtime errors in the new settings UI (undefined.map,
  * bad hook order, missing dictionary keys) that `api.apply` alone cannot.
